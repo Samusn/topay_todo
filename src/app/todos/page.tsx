@@ -8,6 +8,7 @@ interface Todo {
   id: string
   title: string
   description: string | null
+  dueDate: string | null
   completed: boolean
   createdAt: string
   updatedAt: string
@@ -18,6 +19,7 @@ export default function TodosPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [newTitle, setNewTitle] = useState("")
   const [newDescription, setNewDescription] = useState("")
+  const [newDueDate, setNewDueDate] = useState("")
   const [loading, setLoading] = useState(true)
 
   const fetchTodos = async () => {
@@ -46,12 +48,14 @@ export default function TodosPage() {
         body: JSON.stringify({
           title: newTitle,
           description: newDescription || null,
+          dueDate: newDueDate || null,
         }),
       })
 
       if (response.ok) {
         setNewTitle("")
         setNewDescription("")
+        setNewDueDate("")
         setIsDialogOpen(false)
         fetchTodos()
       }
@@ -173,6 +177,17 @@ export default function TodosPage() {
                       className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-colors"
                     />
                   </div>
+                  <div>
+                    <label className="block text-sm font-light text-white/60 mb-2">
+                      Fälligkeitsdatum (optional)
+                    </label>
+                    <input
+                      type="date"
+                      value={newDueDate}
+                      onChange={(e) => setNewDueDate(e.target.value)}
+                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-white/30 transition-colors [color-scheme:dark]"
+                    />
+                  </div>
                 </div>
                 <div className="flex gap-3 mt-6">
                   <button
@@ -234,8 +249,21 @@ export default function TodosPage() {
                         {todo.title}
                       </h3>
                       {todo.description && (
-                        <p className="text-sm text-white/50 font-light">
+                        <p className="text-sm text-white/50 font-light mb-1">
                           {todo.description}
+                        </p>
+                      )}
+                      {todo.dueDate && (
+                        <p className={`text-xs font-light ${
+                          !todo.completed && new Date(todo.dueDate) < new Date()
+                            ? "text-red-400/80"
+                            : "text-white/40"
+                        }`}>
+                          Fällig: {new Date(todo.dueDate).toLocaleDateString("de-DE", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric"
+                          })}
                         </p>
                       )}
                     </div>

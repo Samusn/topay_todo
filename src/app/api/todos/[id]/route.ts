@@ -7,15 +7,17 @@ export async function PATCH(
 ) {
   try {
     const body = await request.json()
-    const { title, description, completed } = body
+    const { title, description, dueDate, completed } = body
+
+    const updateData: any = {}
+    if (title !== undefined) updateData.title = title
+    if (description !== undefined) updateData.description = description
+    if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null
+    if (completed !== undefined) updateData.completed = completed
 
     const todo = await prisma.todo.update({
       where: { id: params.id },
-      data: {
-        ...(title !== undefined && { title }),
-        ...(description !== undefined && { description }),
-        ...(completed !== undefined && { completed }),
-      },
+      data: updateData,
     })
 
     return NextResponse.json(todo)
