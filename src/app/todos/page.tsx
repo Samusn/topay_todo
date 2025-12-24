@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { ArrowLeft, Plus, X, Check, Trash2 } from "lucide-react"
+import { ArrowLeft, Plus, X, Check, Trash2, Edit2 } from "lucide-react"
 
 interface Todo {
   id: string
@@ -17,6 +17,7 @@ interface Todo {
 export default function TodosPage() {
   const [todos, setTodos] = useState<Todo[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [editingTodo, setEditingTodo] = useState<Todo | null>(null)
   const [newTitle, setNewTitle] = useState("")
   const [newDescription, setNewDescription] = useState("")
   const [newDueDate, setNewDueDate] = useState("")
@@ -42,49 +43,98 @@ export default function TodosPage() {
     if (!newTitle.trim()) return
 
     try {
-      const response = await fetch("/api/todos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: newTitle,
-          description: newDescription || null,
-          dueDate: newDueDate || null,
-        }),
-      })
+      const response = editingTodo
+        ? await fetch(`/api/todos/${editingTodo.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              title: newTitle,
+              description: newDescription || null,
+              dueDate: newDueDate || null,
+            }),
+          })
+        : await fetch("/api/todos", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              title: newTitle,
+              description: newDescription || null,
+              dueDate: newDueDate || null,
+            }),
+          })
 
       if (response.ok) {
         setNewTitle("")
         setNewDescription("")
         setNewDueDate("")
         setIsDialogOpen(false)
+        setEditingTodo(null)
         fetchTodos()
+      } else {
+        const errorData = await response.json()
+        console.error("Error creating/updating todo:", errorData)
+        alert("Fehler: " + (errorData.error || "Unbekannter Fehler"))
       }
     } catch (error) {
-      console.error("Error creating todo:", error)
+      console.error("Error creating/updating todo:", error)
     }
+  }
+
+  const handleEdit = (todo: Todo) => {
+    setEditingTodo(todo)
+    setNewTitle(todo.title)
+    setNewDescription(todo.description || "")
+    setNewDueDate(todo.dueDate ? new Date(todo.dueDate).toISOString().split("T")[0] : "")
+    setIsDialogOpen(true)
+  }
+
+  const handleCancel = () => {
+    setIsDialogOpen(false)
+    setEditingTodo(null)
+    setNewTitle("")
+    setNewDescription("")
+    setNewDueDate("")
   }
 
   const handleToggle = async (id: string, completed: boolean) => {
     try {
-      await fetch(`/api/todos/${id}`, {
+      const response = await fetch(`/api/todos/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ completed: !completed }),
       })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error("Error updating todo:", errorData)
+        alert("Fehler beim Aktualisieren des Todos: " + (errorData.error || "Unbekannter Fehler"))
+        return
+      }
+      
       fetchTodos()
     } catch (error) {
       console.error("Error updating todo:", error)
+      alert("Fehler beim Aktualisieren des Todos. Bitte versuche es erneut.")
     }
   }
 
   const handleDelete = async (id: string) => {
     try {
-      await fetch(`/api/todos/${id}`, {
+      const response = await fetch(`/api/todos/${id}`, {
         method: "DELETE",
       })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error("Error deleting todo:", errorData)
+        alert("Fehler beim Löschen des Todos: " + (errorData.error || "Unbekannter Fehler"))
+        return
+      }
+      
       fetchTodos()
     } catch (error) {
       console.error("Error deleting todo:", error)
+      alert("Fehler beim Löschen des Todos. Bitte versuche es erneut.")
     }
   }
 
@@ -128,18 +178,20 @@ export default function TodosPage() {
             </button>
           </div>
 
-          {/* Dialog for creating todo */}
+          {/* Dialog for creating/editing todo */}
           {isDialogOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
               <div 
                 className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-                onClick={() => setIsDialogOpen(false)}
+                onClick={handleCancel}
               />
               <div className="relative bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-xl p-6 sm:p-8 w-full max-w-md">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-medium text-white">Neues Todo</h2>
+                  <h2 className="text-xl font-medium text-white">
+                    {editingTodo ? "Todo bearbeiten" : "Neues Todo"}
+                  </h2>
                   <button
-                    onClick={() => setIsDialogOpen(false)}
+                    onClick={handleCancel}
                     className="text-white/40 hover:text-white transition-colors"
                   >
                     <X className="w-5 h-5" />
@@ -191,7 +243,7 @@ export default function TodosPage() {
                 </div>
                 <div className="flex gap-3 mt-6">
                   <button
-                    onClick={() => setIsDialogOpen(false)}
+                    onClick={handleCancel}
                     className="flex-1 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white/80 hover:text-white transition-all text-sm font-light"
                   >
                     Abbrechen
@@ -200,7 +252,7 @@ export default function TodosPage() {
                     onClick={handleCreate}
                     className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white transition-all text-sm font-light"
                   >
-                    Erstellen
+                    {editingTodo ? "Speichern" : "Erstellen"}
                   </button>
                 </div>
               </div>
@@ -229,11 +281,16 @@ export default function TodosPage() {
                 >
                   <div className="flex items-start gap-4">
                     <button
-                      onClick={() => handleToggle(todo.id, todo.completed)}
-                      className={`mt-1 flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        handleToggle(todo.id, todo.completed)
+                      }}
+                      type="button"
+                      className={`mt-1 flex-shrink-0 w-7 h-7 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${
                         todo.completed
                           ? "bg-white/20 border-white/40"
-                          : "border-white/30 hover:border-white/50"
+                          : "border-white/30 hover:border-white/50 hover:bg-white/5"
                       }`}
                     >
                       {todo.completed && (
@@ -267,12 +324,36 @@ export default function TodosPage() {
                         </p>
                       )}
                     </div>
-                    <button
-                      onClick={() => handleDelete(todo.id)}
-                      className="flex-shrink-0 opacity-0 group-hover:opacity-100 p-2 text-white/40 hover:text-white/80 transition-all"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-2 sm:gap-1 flex-shrink-0">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          handleEdit(todo)
+                        }}
+                        type="button"
+                        className="p-2 sm:p-1.5 text-white/60 hover:text-white/90 hover:bg-white/5 rounded transition-all active:scale-95"
+                        title="Bearbeiten"
+                        aria-label="Bearbeiten"
+                      >
+                        <Edit2 className="w-5 h-5 sm:w-4 sm:h-4" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          if (window.confirm("Möchtest du dieses Todo wirklich löschen?")) {
+                            handleDelete(todo.id)
+                          }
+                        }}
+                        type="button"
+                        className="p-2 sm:p-1.5 text-white/60 hover:text-red-400/90 hover:bg-white/5 rounded transition-all active:scale-95"
+                        title="Löschen"
+                        aria-label="Löschen"
+                      >
+                        <Trash2 className="w-5 h-5 sm:w-4 sm:h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
