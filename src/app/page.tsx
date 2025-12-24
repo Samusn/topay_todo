@@ -18,14 +18,16 @@ export default function Home() {
         <div className="w-full max-w-2xl mx-auto text-center space-y-12">
           {/* Main Title */}
           <div className="space-y-6">
-            <h1 className="text-5xl sm:text-6xl md:text-7xl font-medium tracking-tight">
-              <span className="bg-gradient-to-r from-white via-neutral-100 to-white bg-clip-text text-transparent glow-text">
-                To Pay
-              </span>
-              <span className="text-white/60 font-normal"> & </span>
-              <span className="bg-gradient-to-r from-white via-neutral-100 to-white bg-clip-text text-transparent glow-text">
-                To Do
-              </span>
+            <h1 className="text-7xl sm:text-5xl md:text-6xl lg:text-7xl font-medium tracking-tight">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
+                <span className="bg-gradient-to-r from-white via-neutral-100 to-white bg-clip-text text-transparent glow-text">
+                  To Pay
+                </span>
+                <span className="text-white/60 font-normal hidden sm:inline"> & </span>
+                <span className="bg-gradient-to-r from-white via-neutral-100 to-white bg-clip-text text-transparent glow-text">
+                  To Do
+                </span>
+              </div>
             </h1>
           </div>
 
