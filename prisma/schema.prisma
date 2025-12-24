@@ -28,6 +28,7 @@ model Bill {
   dueDate     DateTime?
   paid        Boolean  @default(false)
   paidDate    DateTime?
+  attachments String?  // JSON string array of base64 encoded images/files
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
