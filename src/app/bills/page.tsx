@@ -438,17 +438,34 @@ export default function BillsPage() {
                         </p>
                       )}
                       <div className="flex flex-wrap items-center gap-2 text-xs text-white/40 font-light">
-                        {bill.dueDate && (
-                          <span
-                            className={
-                              !bill.paid && new Date(bill.dueDate) < new Date()
-                                ? "text-red-400/80"
-                                : ""
-                            }
-                          >
-                            Fällig: {formatDate(bill.dueDate)}
-                          </span>
-                        )}
+                        {bill.dueDate && (() => {
+                          const dueDate = new Date(bill.dueDate)
+                          const today = new Date()
+                          today.setHours(0, 0, 0, 0)
+                          const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+                          const isOverdue = dueDate < today
+                          const isUrgent = daysUntilDue <= 3 && daysUntilDue >= 0
+                          
+                          return (
+                            <span
+                              className={
+                                !bill.paid && isOverdue
+                                  ? "text-red-400/80 font-medium"
+                                  : !bill.paid && isUrgent
+                                  ? "text-yellow-400/80 font-medium"
+                                  : ""
+                              }
+                            >
+                              Fällig: {formatDate(bill.dueDate)}
+                              {!bill.paid && isUrgent && !isOverdue && (
+                                <span className="ml-1">⚠️ ASAP bezahlen!</span>
+                              )}
+                              {!bill.paid && isOverdue && (
+                                <span className="ml-1">⚠️ Überfällig!</span>
+                              )}
+                            </span>
+                          )
+                        })()}
                         {bill.paid && bill.paidDate && (
                           <span>Bezahlt: {formatDate(bill.paidDate)}</span>
                         )}

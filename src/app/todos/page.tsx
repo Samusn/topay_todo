@@ -310,19 +310,36 @@ export default function TodosPage() {
                           {todo.description}
                         </p>
                       )}
-                      {todo.dueDate && (
-                        <p className={`text-xs font-light ${
-                          !todo.completed && new Date(todo.dueDate) < new Date()
-                            ? "text-red-400/80"
-                            : "text-white/40"
-                        }`}>
-                          Fällig: {new Date(todo.dueDate).toLocaleDateString("de-DE", {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric"
-                          })}
-                        </p>
-                      )}
+                      {todo.dueDate && (() => {
+                        const dueDate = new Date(todo.dueDate)
+                        const today = new Date()
+                        today.setHours(0, 0, 0, 0)
+                        const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+                        const isOverdue = dueDate < today
+                        const isUrgent = daysUntilDue <= 3 && daysUntilDue >= 0
+                        
+                        return (
+                          <p className={`text-xs font-light ${
+                            !todo.completed && isOverdue
+                              ? "text-red-400/80"
+                              : !todo.completed && isUrgent
+                              ? "text-yellow-400/80 font-medium"
+                              : "text-white/40"
+                          }`}>
+                            Fällig: {dueDate.toLocaleDateString("de-DE", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "numeric"
+                            })}
+                            {!todo.completed && isUrgent && !isOverdue && (
+                              <span className="ml-2">⚠️ ASAP erledigen!</span>
+                            )}
+                            {!todo.completed && isOverdue && (
+                              <span className="ml-2">⚠️ Überfällig!</span>
+                            )}
+                          </p>
+                        )
+                      })()}
                     </div>
                     <div className="flex items-center gap-2 sm:gap-1 flex-shrink-0">
                       <button
