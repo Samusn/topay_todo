@@ -193,9 +193,9 @@ export default function BillsPage() {
   }
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("de-DE", {
+    return new Intl.NumberFormat("de-CH", {
       style: "currency",
-      currency: "EUR",
+      currency: "CHF",
     }).format(amount)
   }
 
@@ -282,7 +282,7 @@ export default function BillsPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-light text-white/60 mb-2">
-                      Betrag (€) *
+                      Betrag (CHF) *
                     </label>
                     <input
                       type="number"

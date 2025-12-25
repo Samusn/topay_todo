@@ -4,7 +4,10 @@ import { prisma } from "@/lib/prisma"
 export async function GET() {
   try {
     const todos = await prisma.todo.findMany({
-      orderBy: { createdAt: "desc" },
+      orderBy: [
+        { completed: "asc" }, // Unerledigte zuerst (false kommt vor true)
+        { createdAt: "desc" },
+      ],
     })
     return NextResponse.json(todos)
   } catch (error) {

@@ -4,7 +4,10 @@ import { prisma } from "@/lib/prisma"
 export async function GET() {
   try {
     const bills = await prisma.bill.findMany({
-      orderBy: { createdAt: "desc" },
+      orderBy: [
+        { paid: "asc" }, // Unbezahlte zuerst (false kommt vor true)
+        { createdAt: "desc" },
+      ],
     })
     return NextResponse.json(bills)
   } catch (error) {
