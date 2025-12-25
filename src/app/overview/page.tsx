@@ -92,22 +92,39 @@ export default function OverviewPage() {
       const url = editingTodo ? `/api/todos/${editingTodo.id}` : "/api/todos"
       const method = editingTodo ? "PATCH" : "POST"
 
+      const requestBody = {
+        title: newTitle,
+        description: newDescription || null,
+        dueDate: newDueDate || null,
+      }
+
+      console.log("Creating/updating todo:", { url, method, body: requestBody })
+
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: newTitle,
-          description: newDescription || null,
-          dueDate: newDueDate || null,
-        }),
+        body: JSON.stringify(requestBody),
       })
 
       if (response.ok) {
         resetDialog()
         fetchData()
+      } else {
+        let errorMessage = "Unbekannter Fehler"
+        try {
+          const errorData = await response.json()
+          console.error("Error response data:", errorData)
+          errorMessage = errorData.error || errorData.details || errorMessage
+        } catch (jsonError) {
+          const text = await response.text()
+          console.error("Error response text:", text, "Status:", response.status)
+          errorMessage = text || `HTTP ${response.status}`
+        }
+        alert("Fehler beim Speichern: " + errorMessage)
       }
     } catch (error) {
       console.error("Error creating/updating todo:", error)
+      alert("Fehler beim Speichern: " + (error instanceof Error ? error.message : "Unbekannter Fehler"))
     }
   }
 
@@ -118,23 +135,42 @@ export default function OverviewPage() {
       const url = editingBill ? `/api/bills/${editingBill.id}` : "/api/bills"
       const method = editingBill ? "PATCH" : "POST"
 
+      const requestBody = {
+        title: newTitle,
+        description: newDescription || null,
+        amount: parseFloat(newAmount),
+        dueDate: newDueDate || null,
+      }
+
+      console.log("Creating/updating bill:", { url, method, body: requestBody })
+
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: newTitle,
-          description: newDescription || null,
-          amount: parseFloat(newAmount),
-          dueDate: newDueDate || null,
-        }),
+        body: JSON.stringify(requestBody),
       })
+
+      console.log("Bill response status:", response.status, "ok:", response.ok, "statusText:", response.statusText)
 
       if (response.ok) {
         resetDialog()
         fetchData()
+      } else {
+        let errorMessage = "Unbekannter Fehler"
+        try {
+          const errorData = await response.json()
+          console.error("Error response data:", errorData, "Status:", response.status, "StatusText:", response.statusText)
+          errorMessage = errorData.error || errorData.details || errorMessage
+        } catch (jsonError) {
+          const text = await response.text()
+          console.error("Error response text:", text, "Status:", response.status, "StatusText:", response.statusText, "JsonError:", jsonError)
+          errorMessage = text || `HTTP ${response.status} ${response.statusText}`
+        }
+        alert("Fehler beim Speichern: " + errorMessage)
       }
     } catch (error) {
       console.error("Error creating/updating bill:", error)
+      alert("Fehler beim Speichern: " + (error instanceof Error ? error.message : "Unbekannter Fehler"))
     }
   }
 
@@ -144,7 +180,13 @@ export default function OverviewPage() {
     setDialogType("todo")
     setNewTitle(todo.title)
     setNewDescription(todo.description || "")
-    setNewDueDate(todo.dueDate ? new Date(todo.dueDate).toISOString().split("T")[0] : "")
+    // Parse date string as local date to avoid timezone issues
+    if (todo.dueDate) {
+      const dateStr = todo.dueDate.split("T")[0]
+      setNewDueDate(dateStr)
+    } else {
+      setNewDueDate("")
+    }
     setNewAmount("")
     setIsDialogOpen(true)
   }
@@ -156,7 +198,13 @@ export default function OverviewPage() {
     setNewTitle(bill.title)
     setNewDescription(bill.description || "")
     setNewAmount(bill.amount.toString())
-    setNewDueDate(bill.dueDate ? new Date(bill.dueDate).toISOString().split("T")[0] : "")
+    // Parse date string as local date to avoid timezone issues
+    if (bill.dueDate) {
+      const dateStr = bill.dueDate.split("T")[0]
+      setNewDueDate(dateStr)
+    } else {
+      setNewDueDate("")
+    }
     setIsDialogOpen(true)
   }
 
