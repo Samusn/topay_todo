@@ -12,7 +12,7 @@ interface Bill {
   dueDate: string | null
   paid: boolean
   paidDate: string | null
-  attachments: string | null
+  attachments: string | null | string[]
   createdAt: string
   updatedAt: string
 }
@@ -35,7 +35,7 @@ export default function BillsPage() {
       const data = await response.json()
       setBills(data.map((bill: Bill) => ({
         ...bill,
-        attachments: bill.attachments ? JSON.parse(bill.attachments) : null
+        attachments: bill.attachments ? JSON.parse(bill.attachments as string) : null
       })))
     } catch (error) {
       console.error("Error fetching bills:", error)
@@ -124,7 +124,10 @@ export default function BillsPage() {
     setNewDescription(bill.description || "")
     setNewAmount(bill.amount.toString())
     setNewDueDate(bill.dueDate ? new Date(bill.dueDate).toISOString().split("T")[0] : "")
-    setAttachments(bill.attachments || [])
+    const attachmentsArray = Array.isArray(bill.attachments) 
+      ? bill.attachments 
+      : (bill.attachments && typeof bill.attachments === 'string' ? JSON.parse(bill.attachments) : [])
+    setAttachments(attachmentsArray)
     setIsDialogOpen(true)
   }
 
@@ -449,7 +452,7 @@ export default function BillsPage() {
                         {bill.paid && bill.paidDate && (
                           <span>Bezahlt: {formatDate(bill.paidDate)}</span>
                         )}
-                        {bill.attachments && bill.attachments.length > 0 && (
+                        {bill.attachments && Array.isArray(bill.attachments) && bill.attachments.length > 0 && (
                           <span className="flex items-center gap-1">
                             <Paperclip className="w-3 h-3" />
                             {bill.attachments.length} Datei{bill.attachments.length > 1 ? "en" : ""}
