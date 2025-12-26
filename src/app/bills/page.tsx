@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
-import { ArrowLeft, Plus, X, CheckCircle2, Circle, Trash2, Edit2, Paperclip, XCircle } from "lucide-react"
+import { ArrowLeft, Plus, X, CheckCircle2, Circle, Trash2, Edit2, Paperclip, XCircle, ChevronDown, ChevronUp } from "lucide-react"
 
 interface Bill {
   id: string
@@ -28,6 +28,7 @@ export default function BillsPage() {
   const [attachments, setAttachments] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(true)
+  const [showCompleted, setShowCompleted] = useState(false)
 
   const fetchBills = async () => {
     try {
@@ -391,7 +392,7 @@ export default function BillsPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {bills.map((bill) => (
+              {bills.filter((bill) => !bill.paid).map((bill) => (
                 <div
                   key={bill.id}
                   className={`group bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg p-4 sm:p-5 transition-all duration-300 ${
@@ -512,6 +513,112 @@ export default function BillsPage() {
                   </div>
                 </div>
               ))}
+
+              {bills.filter((bill) => bill.paid).length > 0 && (
+                <div className="pt-4 border-t border-white/10">
+                  <button
+                    onClick={() => setShowCompleted(!showCompleted)}
+                    className="flex items-center gap-2 w-full text-sm text-white/50 hover:text-white/70 transition-colors py-2"
+                  >
+                    {showCompleted ? (
+                      <ChevronUp className="w-4 h-4" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" />
+                    )}
+                    <span>
+                      Bezahlt ({bills.filter((bill) => bill.paid).length})
+                    </span>
+                  </button>
+
+                  {showCompleted && (
+                    <div className="space-y-3 mt-3">
+                      {bills.filter((bill) => bill.paid).map((bill) => (
+                        <div
+                          key={bill.id}
+                          className="group bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg p-4 sm:p-5 transition-all duration-300 opacity-60"
+                        >
+                          <div className="flex items-start gap-4">
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                handleTogglePaid(bill.id, bill.paid)
+                              }}
+                              type="button"
+                              className="mt-1 flex-shrink-0 w-7 h-7 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer bg-green-500/20 border-green-400/40"
+                            >
+                              <CheckCircle2 className="w-4 h-4 text-green-400" />
+                            </button>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className="text-base font-normal text-white/50 line-through">
+                                  {bill.title}
+                                </h3>
+                                <span className="text-lg font-semibold text-white/50 line-through">
+                                  {formatCurrency(bill.amount)}
+                                </span>
+                              </div>
+                              {bill.description && (
+                                <p className="text-sm text-white/50 font-light mb-1">
+                                  {bill.description}
+                                </p>
+                              )}
+                              <div className="flex flex-wrap items-center gap-2 text-xs text-white/40 font-light">
+                                {bill.dueDate && (
+                                  <span>Fällig: {formatDate(bill.dueDate)}</span>
+                                )}
+                                {bill.paid && bill.paidDate && (
+                                  <span>Bezahlt: {formatDate(bill.paidDate)}</span>
+                                )}
+                                {bill.attachments && Array.isArray(bill.attachments) && bill.attachments.length > 0 && (
+                                  <span className="flex items-center gap-1">
+                                    <Paperclip className="w-3 h-3" />
+                                    {bill.attachments.length} Datei{bill.attachments.length > 1 ? "en" : ""}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 sm:gap-1 flex-shrink-0">
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  handleEdit(bill)
+                                }}
+                                type="button"
+                                className="p-2 sm:p-1.5 text-white/60 hover:text-white/90 hover:bg-white/5 rounded transition-all active:scale-95"
+                                title="Bearbeiten"
+                                aria-label="Bearbeiten"
+                              >
+                                <Edit2 className="w-5 h-5 sm:w-4 sm:h-4" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  if (
+                                    window.confirm(
+                                      "Möchtest du diese Rechnung wirklich löschen?"
+                                    )
+                                  ) {
+                                    handleDelete(bill.id)
+                                  }
+                                }}
+                                type="button"
+                                className="p-2 sm:p-1.5 text-white/60 hover:text-red-400/90 hover:bg-white/5 rounded transition-all active:scale-95"
+                                title="Löschen"
+                                aria-label="Löschen"
+                              >
+                                <Trash2 className="w-5 h-5 sm:w-4 sm:h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

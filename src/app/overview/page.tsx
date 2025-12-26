@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { ArrowLeft, ChevronLeft, ChevronRight, X, Plus, Edit2, Trash2, Paperclip } from "lucide-react"
+import { ArrowLeft, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, X, Plus, Edit2, Trash2, Paperclip, Check } from "lucide-react"
 
 interface Todo {
   id: string
@@ -47,6 +47,7 @@ export default function OverviewPage() {
   const [newAmount, setNewAmount] = useState("")
   const [newDueDate, setNewDueDate] = useState("")
   const [dialogType, setDialogType] = useState<"todo" | "bill" | null>(null)
+  const [showCompleted, setShowCompleted] = useState(false)
 
   const fetchData = async () => {
     try {
@@ -221,6 +222,49 @@ export default function OverviewPage() {
     }
   }
 
+  const handleToggleTodo = async (id: string, completed: boolean) => {
+    try {
+      const response = await fetch(`/api/todos/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ completed: !completed }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        alert("Fehler beim Aktualisieren des Todos: " + (errorData.error || "Unbekannter Fehler"))
+        return
+      }
+
+      fetchData()
+    } catch (error) {
+      alert("Fehler beim Aktualisieren des Todos. Bitte versuche es erneut.")
+    }
+  }
+
+  const handleToggleBill = async (id: string, paid: boolean) => {
+    try {
+      const response = await fetch(`/api/bills/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          paid: !paid,
+          paidDate: !paid ? new Date().toISOString() : null,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        alert("Fehler beim Aktualisieren der Rechnung: " + (errorData.error || "Unbekannter Fehler"))
+        return
+      }
+
+      fetchData()
+    } catch (error) {
+      alert("Fehler beim Aktualisieren der Rechnung. Bitte versuche es erneut.")
+    }
+  }
+
   const resetDialog = () => {
     setIsDialogOpen(false)
     setSelectedDate(null)
@@ -259,7 +303,8 @@ export default function OverviewPage() {
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return null
-    const [year, month, day] = dateString.split("-").map(Number)
+    const dateStr = dateString.split("T")[0]
+    const [year, month, day] = dateStr.split("-").map(Number)
     const date = new Date(year, month - 1, day)
     return date.toLocaleDateString("de-DE", {
       day: "2-digit",
@@ -273,6 +318,19 @@ export default function OverviewPage() {
       style: "currency",
       currency: "CHF",
     }).format(amount)
+  }
+
+  const getMonthlyExpenses = () => {
+    const currentMonth = currentDate.getMonth()
+    const currentYear = currentDate.getFullYear()
+    
+    return bills
+      .filter((bill) => {
+        if (!bill.paid || !bill.paidDate) return false
+        const paidDate = new Date(bill.paidDate)
+        return paidDate.getMonth() === currentMonth && paidDate.getFullYear() === currentYear
+      })
+      .reduce((sum, bill) => sum + bill.amount, 0)
   }
 
   const getDaysInMonth = (date: Date) => {
@@ -301,13 +359,13 @@ export default function OverviewPage() {
   const getItemsForDate = (date: Date) => {
     const dateKey = formatDateKey(date)
     const dateTodos = todos.filter((todo) => {
-      if (!todo.dueDate || todo.completed) return false
+      if (!todo.dueDate) return false
       const [year, month, day] = todo.dueDate.split("T")[0].split("-").map(Number)
       const todoDate = new Date(year, month - 1, day)
       return formatDateKey(todoDate) === dateKey
     })
     const dateBills = bills.filter((bill) => {
-      if (!bill.dueDate || bill.paid) return false
+      if (!bill.dueDate) return false
       const [year, month, day] = bill.dueDate.split("T")[0].split("-").map(Number)
       const billDate = new Date(year, month - 1, day)
       return formatDateKey(billDate) === dateKey
@@ -361,7 +419,7 @@ export default function OverviewPage() {
 
   const itemsByDate: Record<string, { todos: Todo[]; bills: Bill[] }> = {}
   todos
-    .filter((todo) => todo.dueDate && !todo.completed)
+    .filter((todo) => todo.dueDate)
     .forEach((todo) => {
       const dateStr = todo.dueDate!.split("T")[0]
       const [year, month, day] = dateStr.split("-").map(Number)
@@ -371,7 +429,7 @@ export default function OverviewPage() {
       itemsByDate[key].todos.push(todo)
     })
   bills
-    .filter((bill) => bill.dueDate && !bill.paid)
+    .filter((bill) => bill.dueDate)
     .forEach((bill) => {
       const dateStr = bill.dueDate!.split("T")[0]
       const [year, month, day] = dateStr.split("-").map(Number)
@@ -408,6 +466,9 @@ export default function OverviewPage() {
                 Übersicht
               </span>
             </h1>
+            <p className="text-white/60 text-sm font-light">
+              Ausgaben {monthNames[currentDate.getMonth()]}: {formatCurrency(getMonthlyExpenses())}
+            </p>
           </div>
 
           {/* Calendar */}
@@ -454,14 +515,17 @@ export default function OverviewPage() {
                 const isToday = isSameDay(date, todayDate)
                 const isCurrentMonth = date.getMonth() === currentDate.getMonth()
                 const totalItems = dayItems.todos.length + dayItems.bills.length
+                const uncompletedTodos = dayItems.todos.filter((todo) => !todo.completed).length
+                const unpaidBills = dayItems.bills.filter((bill) => !bill.paid).length
+                const uncompletedItems = uncompletedTodos + unpaidBills
 
                 const todayForCalc = new Date()
                 todayForCalc.setHours(0, 0, 0, 0)
                 const dateForCalc = new Date(date)
                 dateForCalc.setHours(0, 0, 0, 0)
                 const daysUntilDue = Math.ceil((dateForCalc.getTime() - todayForCalc.getTime()) / (1000 * 60 * 60 * 24))
-                const isUrgent = daysUntilDue <= 3 && daysUntilDue >= 0 && totalItems > 0
-                const isOverdue = daysUntilDue < 0 && totalItems > 0
+                const isUrgent = daysUntilDue <= 3 && daysUntilDue >= 0 && uncompletedItems > 0
+                const isOverdue = daysUntilDue < 0 && uncompletedItems > 0
 
                 return (
                   <button
@@ -508,7 +572,7 @@ export default function OverviewPage() {
 
           {/* Upcoming Items */}
           <div className="mt-8 space-y-6">
-            <h2 className="text-2xl font-medium text-white">Anstehende Fälligkeiten</h2>
+            <h2 className="text-2xl font-medium text-white">Fälligkeiten</h2>
 
             {loading ? (
               <div className="text-center text-white/40 text-sm font-light py-12">
@@ -519,6 +583,11 @@ export default function OverviewPage() {
                 {Object.entries(itemsByDate)
                   .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
                   .slice(0, 10)
+                  .filter(([dateKey, items]) => {
+                    const uncompletedTodos = items.todos.filter((todo) => !todo.completed).length
+                    const unpaidBills = items.bills.filter((bill) => !bill.paid).length
+                    return uncompletedTodos + unpaidBills > 0
+                  })
                   .map(([dateKey, items]) => {
                     const [year, month, day] = dateKey.split("-").map(Number)
                     const date = new Date(year, month - 1, day)
@@ -526,8 +595,11 @@ export default function OverviewPage() {
                     todayForCalc.setHours(0, 0, 0, 0)
                     date.setHours(0, 0, 0, 0)
                     const daysUntilDue = Math.ceil((date.getTime() - todayForCalc.getTime()) / (1000 * 60 * 60 * 24))
-                    const isOverdue = daysUntilDue < 0
-                    const isUrgent = daysUntilDue <= 3 && daysUntilDue >= 0
+                    const uncompletedTodos = items.todos.filter((todo) => !todo.completed).length
+                    const unpaidBills = items.bills.filter((bill) => !bill.paid).length
+                    const uncompletedItems = uncompletedTodos + unpaidBills
+                    const isOverdue = daysUntilDue < 0 && uncompletedItems > 0
+                    const isUrgent = daysUntilDue <= 3 && daysUntilDue >= 0 && uncompletedItems > 0
 
                     return (
                       <div
@@ -557,16 +629,35 @@ export default function OverviewPage() {
                         </div>
 
                         <div className="space-y-3">
-                          {items.todos.map((todo) => (
+                          {items.todos.filter((todo) => !todo.completed).map((todo) => (
                             <div
                               key={todo.id}
-                              className="flex items-start gap-3 p-3 bg-white/5 rounded-lg"
+                              className={`flex items-start gap-3 p-3 bg-white/5 rounded-lg ${todo.completed ? "opacity-60" : ""}`}
                             >
-                              <div className="w-2 h-2 rounded-full bg-blue-400 mt-1.5 flex-shrink-0" />
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleToggleTodo(todo.id, todo.completed)
+                                }}
+                                className={`mt-0.5 flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${
+                                  todo.completed
+                                    ? "bg-white/20 border-white/40"
+                                    : "border-white/30 hover:border-white/50 hover:bg-white/5"
+                                }`}
+                              >
+                                {todo.completed && <Check className="w-3 h-3 text-white" />}
+                              </button>
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm text-white font-normal">
-                                  {todo.title}
-                                </p>
+                                <div className="flex items-center gap-2">
+                                  <p className={`text-sm font-normal ${todo.completed ? "text-white/50 line-through" : "text-white"}`}>
+                                    {todo.title}
+                                  </p>
+                                  {todo.completed && (
+                                    <span className="text-xs text-white/40 font-light">
+                                      Erledigt
+                                    </span>
+                                  )}
+                                </div>
                                 {todo.description && (
                                   <p className="text-xs text-white/50 font-light mt-1">
                                     {todo.description}
@@ -576,18 +667,37 @@ export default function OverviewPage() {
                             </div>
                           ))}
 
-                          {items.bills.map((bill) => (
+                          {items.bills.filter((bill) => !bill.paid).map((bill) => (
                             <div
                               key={bill.id}
-                              className="flex items-start gap-3 p-3 bg-white/5 rounded-lg"
+                              className={`flex items-start gap-3 p-3 bg-white/5 rounded-lg ${bill.paid ? "opacity-60" : ""}`}
                             >
-                              <div className="w-2 h-2 rounded-full bg-purple-400 mt-1.5 flex-shrink-0" />
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleToggleBill(bill.id, bill.paid)
+                                }}
+                                className={`mt-0.5 flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${
+                                  bill.paid
+                                    ? "bg-white/20 border-white/40"
+                                    : "border-white/30 hover:border-white/50 hover:bg-white/5"
+                                }`}
+                              >
+                                {bill.paid && <Check className="w-3 h-3 text-white" />}
+                              </button>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between gap-2">
-                                  <p className="text-sm text-white font-normal">
-                                    {bill.title}
-                                  </p>
-                                  <p className="text-sm text-white font-semibold flex-shrink-0">
+                                  <div className="flex items-center gap-2">
+                                    <p className={`text-sm font-normal ${bill.paid ? "text-white/50 line-through" : "text-white"}`}>
+                                      {bill.title}
+                                    </p>
+                                    {bill.paid && (
+                                      <span className="text-xs text-white/40 font-light">
+                                        Bezahlt
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className={`text-sm font-semibold flex-shrink-0 ${bill.paid ? "text-white/50 line-through" : "text-white"}`}>
                                     {formatCurrency(bill.amount)}
                                   </p>
                                 </div>
@@ -611,6 +721,107 @@ export default function OverviewPage() {
                 <p className="text-white/40 text-sm font-light">
                   Keine anstehenden Fälligkeiten
                 </p>
+              </div>
+            )}
+
+            {!loading && (todos.filter((t) => t.completed).length > 0 || bills.filter((b) => b.paid).length > 0) && (
+              <div className="mt-8 pt-8 border-t border-white/10">
+                <button
+                  onClick={() => setShowCompleted(!showCompleted)}
+                  className="flex items-center gap-2 w-full text-sm text-white/50 hover:text-white/70 transition-colors py-2"
+                >
+                  {showCompleted ? (
+                    <ChevronUp className="w-4 h-4" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4" />
+                  )}
+                  <span>
+                    Erledigt ({todos.filter((t) => t.completed).length + bills.filter((b) => b.paid).length})
+                  </span>
+                </button>
+
+                {showCompleted && (
+                  <div className="space-y-4 mt-4">
+                    {todos.filter((todo) => todo.completed).map((todo) => (
+                      <div
+                        key={todo.id}
+                        className="flex items-start gap-3 p-3 bg-white/5 rounded-lg opacity-60"
+                      >
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleToggleTodo(todo.id, todo.completed)
+                          }}
+                          className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer bg-white/20 border-white/40"
+                        >
+                          <Check className="w-3 h-3 text-white" />
+                        </button>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-normal text-white/50 line-through">
+                              {todo.title}
+                            </p>
+                            <span className="text-xs text-white/40 font-light">
+                              Erledigt
+                            </span>
+                          </div>
+                          {todo.description && (
+                            <p className="text-xs text-white/50 font-light mt-1">
+                              {todo.description}
+                            </p>
+                          )}
+                          {todo.dueDate && (
+                            <p className="text-xs text-white/40 font-light mt-1">
+                              Fällig: {formatDate(todo.dueDate)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                    {bills.filter((bill) => bill.paid).map((bill) => (
+                      <div
+                        key={bill.id}
+                        className="flex items-start gap-3 p-3 bg-white/5 rounded-lg opacity-60"
+                      >
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleToggleBill(bill.id, bill.paid)
+                          }}
+                          className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer bg-white/20 border-white/40"
+                        >
+                          <Check className="w-3 h-3 text-white" />
+                        </button>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-normal text-white/50 line-through">
+                                {bill.title}
+                              </p>
+                              <span className="text-xs text-white/40 font-light">
+                                Bezahlt
+                              </span>
+                            </div>
+                            <p className="text-sm font-semibold flex-shrink-0 text-white/50 line-through">
+                              {formatCurrency(bill.amount)}
+                            </p>
+                          </div>
+                          {bill.description && (
+                            <p className="text-xs text-white/50 font-light mt-1">
+                              {bill.description}
+                            </p>
+                          )}
+                          {bill.dueDate && (
+                            <p className="text-xs text-white/40 font-light mt-1">
+                              Fällig: {formatDate(bill.dueDate)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -668,13 +879,32 @@ export default function OverviewPage() {
                     {itemsByDate[selectedDate].todos.map((todo) => (
                       <div
                         key={todo.id}
-                        className="flex items-start gap-3 p-4 bg-white/5 rounded-lg"
+                        className={`flex items-start gap-3 p-4 bg-white/5 rounded-lg ${todo.completed ? "opacity-60" : ""}`}
                       >
-                        <div className="w-2 h-2 rounded-full bg-blue-400 mt-1.5 flex-shrink-0" />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleToggleTodo(todo.id, todo.completed)
+                          }}
+                          className={`mt-0.5 flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${
+                            todo.completed
+                              ? "bg-white/20 border-white/40"
+                              : "border-white/30 hover:border-white/50 hover:bg-white/5"
+                          }`}
+                        >
+                          {todo.completed && <Check className="w-4 h-4 text-white" />}
+                        </button>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-white font-normal">
-                            {todo.title}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <p className={`text-sm font-normal ${todo.completed ? "text-white/50 line-through" : "text-white"}`}>
+                              {todo.title}
+                            </p>
+                            {todo.completed && (
+                              <span className="text-xs text-white/40 font-light">
+                                Erledigt
+                              </span>
+                            )}
+                          </div>
                           {todo.description && (
                             <p className="text-xs text-white/50 font-light mt-1">
                               {todo.description}
@@ -683,13 +913,19 @@ export default function OverviewPage() {
                         </div>
                         <div className="flex gap-2">
                           <button
-                            onClick={() => handleEditTodo(todo)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleEditTodo(todo)
+                            }}
                             className="p-2 text-white/60 hover:text-white/90 hover:bg-white/5 rounded transition-all"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleDeleteTodo(todo.id)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDeleteTodo(todo.id)
+                            }}
                             className="p-2 text-white/60 hover:text-red-400/90 hover:bg-white/5 rounded transition-all"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -701,15 +937,34 @@ export default function OverviewPage() {
                     {itemsByDate[selectedDate].bills.map((bill) => (
                       <div
                         key={bill.id}
-                        className="flex items-start gap-3 p-4 bg-white/5 rounded-lg"
+                        className={`flex items-start gap-3 p-4 bg-white/5 rounded-lg ${bill.paid ? "opacity-60" : ""}`}
                       >
-                        <div className="w-2 h-2 rounded-full bg-purple-400 mt-1.5 flex-shrink-0" />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleToggleBill(bill.id, bill.paid)
+                          }}
+                          className={`mt-0.5 flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${
+                            bill.paid
+                              ? "bg-white/20 border-white/40"
+                              : "border-white/30 hover:border-white/50 hover:bg-white/5"
+                          }`}
+                        >
+                          {bill.paid && <Check className="w-4 h-4 text-white" />}
+                        </button>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
-                            <p className="text-sm text-white font-normal">
-                              {bill.title}
-                            </p>
-                            <p className="text-sm text-white font-semibold flex-shrink-0">
+                            <div className="flex items-center gap-2">
+                              <p className={`text-sm font-normal ${bill.paid ? "text-white/50 line-through" : "text-white"}`}>
+                                {bill.title}
+                              </p>
+                              {bill.paid && (
+                                <span className="text-xs text-white/40 font-light">
+                                  Bezahlt
+                                </span>
+                              )}
+                            </div>
+                            <p className={`text-sm font-semibold flex-shrink-0 ${bill.paid ? "text-white/50 line-through" : "text-white"}`}>
                               {formatCurrency(bill.amount)}
                             </p>
                           </div>
@@ -721,13 +976,19 @@ export default function OverviewPage() {
                         </div>
                         <div className="flex gap-2">
                           <button
-                            onClick={() => handleEditBill(bill)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleEditBill(bill)
+                            }}
                             className="p-2 text-white/60 hover:text-white/90 hover:bg-white/5 rounded transition-all"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleDeleteBill(bill.id)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDeleteBill(bill.id)
+                            }}
                             className="p-2 text-white/60 hover:text-red-400/90 hover:bg-white/5 rounded transition-all"
                           >
                             <Trash2 className="w-4 h-4" />

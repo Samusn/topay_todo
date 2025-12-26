@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { ArrowLeft, Plus, X, Check, Trash2, Edit2 } from "lucide-react"
+import { ArrowLeft, Plus, X, Check, Trash2, Edit2, ChevronDown, ChevronUp } from "lucide-react"
 
 interface Todo {
   id: string
@@ -22,6 +22,7 @@ export default function TodosPage() {
   const [newDescription, setNewDescription] = useState("")
   const [newDueDate, setNewDueDate] = useState("")
   const [loading, setLoading] = useState(true)
+  const [showCompleted, setShowCompleted] = useState(false)
 
   const fetchTodos = async () => {
     try {
@@ -270,7 +271,7 @@ export default function TodosPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {todos.map((todo) => (
+              {todos.filter((todo) => !todo.completed).map((todo) => (
                 <div
                   key={todo.id}
                   className={`group bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg p-4 sm:p-5 transition-all duration-300 ${
@@ -372,6 +373,98 @@ export default function TodosPage() {
                   </div>
                 </div>
               ))}
+
+              {todos.filter((todo) => todo.completed).length > 0 && (
+                <div className="pt-4 border-t border-white/10">
+                  <button
+                    onClick={() => setShowCompleted(!showCompleted)}
+                    className="flex items-center gap-2 w-full text-sm text-white/50 hover:text-white/70 transition-colors py-2"
+                  >
+                    {showCompleted ? (
+                      <ChevronUp className="w-4 h-4" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" />
+                    )}
+                    <span>
+                      Erledigt ({todos.filter((todo) => todo.completed).length})
+                    </span>
+                  </button>
+
+                  {showCompleted && (
+                    <div className="space-y-3 mt-3">
+                      {todos.filter((todo) => todo.completed).map((todo) => (
+                        <div
+                          key={todo.id}
+                          className="group bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg p-4 sm:p-5 transition-all duration-300 opacity-60"
+                        >
+                          <div className="flex items-start gap-4">
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                handleToggle(todo.id, todo.completed)
+                              }}
+                              type="button"
+                              className="mt-1 flex-shrink-0 w-7 h-7 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer bg-white/20 border-white/40"
+                            >
+                              <Check className="w-4 h-4 text-white" />
+                            </button>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-base font-normal text-white/50 line-through mb-1">
+                                {todo.title}
+                              </h3>
+                              {todo.description && (
+                                <p className="text-sm text-white/50 font-light mb-1">
+                                  {todo.description}
+                                </p>
+                              )}
+                              {todo.dueDate && (
+                                <p className="text-xs font-light text-white/40">
+                                  Fällig: {new Date(todo.dueDate).toLocaleDateString("de-DE", {
+                                    day: "2-digit",
+                                    month: "2-digit",
+                                    year: "numeric"
+                                  })}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 sm:gap-1 flex-shrink-0">
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  handleEdit(todo)
+                                }}
+                                type="button"
+                                className="p-2 sm:p-1.5 text-white/60 hover:text-white/90 hover:bg-white/5 rounded transition-all active:scale-95"
+                                title="Bearbeiten"
+                                aria-label="Bearbeiten"
+                              >
+                                <Edit2 className="w-5 h-5 sm:w-4 sm:h-4" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  if (window.confirm("Möchtest du dieses Todo wirklich löschen?")) {
+                                    handleDelete(todo.id)
+                                  }
+                                }}
+                                type="button"
+                                className="p-2 sm:p-1.5 text-white/60 hover:text-red-400/90 hover:bg-white/5 rounded transition-all active:scale-95"
+                                title="Löschen"
+                                aria-label="Löschen"
+                              >
+                                <Trash2 className="w-5 h-5 sm:w-4 sm:h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
