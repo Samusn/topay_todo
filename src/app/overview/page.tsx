@@ -54,17 +54,26 @@ export default function OverviewPage() {
         fetch("/api/todos"),
         fetch("/api/bills"),
       ])
-      const todosData = await todosRes.json()
-          const billsData = await billsRes.json()
-      setTodos(todosData)
-      setBills(
-        billsData.map((bill: Bill) => ({
-          ...bill,
-          attachments: bill.attachments ? JSON.parse(bill.attachments) : null,
-        }))
-      )
+      
+      if (todosRes.ok && billsRes.ok) {
+        const todosData = await todosRes.json()
+        const billsData = await billsRes.json()
+        setTodos(Array.isArray(todosData) ? todosData : [])
+        setBills(
+          Array.isArray(billsData)
+            ? billsData.map((bill: Bill) => ({
+                ...bill,
+                attachments: bill.attachments ? JSON.parse(bill.attachments) : null,
+              }))
+            : []
+        )
+      } else {
+        setTodos([])
+        setBills([])
+      }
     } catch (error) {
-      console.error("Error fetching data:", error)
+      setTodos([])
+      setBills([])
     } finally {
       setLoading(false)
     }
@@ -75,7 +84,6 @@ export default function OverviewPage() {
   }, [])
 
   const handleDateClick = (date: Date) => {
-    // Create date string in local timezone (YYYY-MM-DD)
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, "0")
     const day = String(date.getDate()).padStart(2, "0")
@@ -98,8 +106,6 @@ export default function OverviewPage() {
         dueDate: newDueDate || null,
       }
 
-      console.log("Creating/updating todo:", { url, method, body: requestBody })
-
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
@@ -113,17 +119,14 @@ export default function OverviewPage() {
         let errorMessage = "Unbekannter Fehler"
         try {
           const errorData = await response.json()
-          console.error("Error response data:", errorData)
           errorMessage = errorData.error || errorData.details || errorMessage
-        } catch (jsonError) {
+        } catch {
           const text = await response.text()
-          console.error("Error response text:", text, "Status:", response.status)
           errorMessage = text || `HTTP ${response.status}`
         }
         alert("Fehler beim Speichern: " + errorMessage)
       }
     } catch (error) {
-      console.error("Error creating/updating todo:", error)
       alert("Fehler beim Speichern: " + (error instanceof Error ? error.message : "Unbekannter Fehler"))
     }
   }
@@ -142,15 +145,11 @@ export default function OverviewPage() {
         dueDate: newDueDate || null,
       }
 
-      console.log("Creating/updating bill:", { url, method, body: requestBody })
-
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
       })
-
-      console.log("Bill response status:", response.status, "ok:", response.ok, "statusText:", response.statusText)
 
       if (response.ok) {
         resetDialog()
@@ -159,11 +158,9 @@ export default function OverviewPage() {
         let errorMessage = "Unbekannter Fehler"
         try {
           const errorData = await response.json()
-          console.error("Error response data:", errorData, "Status:", response.status, "StatusText:", response.statusText)
           errorMessage = errorData.error || errorData.details || errorMessage
-        } catch (jsonError) {
+        } catch {
           const text = await response.text()
-          console.error("Error response text:", text, "Status:", response.status, "StatusText:", response.statusText, "JsonError:", jsonError)
           errorMessage = text || `HTTP ${response.status} ${response.statusText}`
         }
         alert("Fehler beim Speichern: " + errorMessage)
@@ -180,7 +177,6 @@ export default function OverviewPage() {
     setDialogType("todo")
     setNewTitle(todo.title)
     setNewDescription(todo.description || "")
-    // Parse date string as local date to avoid timezone issues
     if (todo.dueDate) {
       const dateStr = todo.dueDate.split("T")[0]
       setNewDueDate(dateStr)
@@ -198,7 +194,6 @@ export default function OverviewPage() {
     setNewTitle(bill.title)
     setNewDescription(bill.description || "")
     setNewAmount(bill.amount.toString())
-    // Parse date string as local date to avoid timezone issues
     if (bill.dueDate) {
       const dateStr = bill.dueDate.split("T")[0]
       setNewDueDate(dateStr)
@@ -214,7 +209,6 @@ export default function OverviewPage() {
       await fetch(`/api/todos/${id}`, { method: "DELETE" })
       fetchData()
     } catch (error) {
-      console.error("Error deleting todo:", error)
     }
   }
 
@@ -224,7 +218,6 @@ export default function OverviewPage() {
       await fetch(`/api/bills/${id}`, { method: "DELETE" })
       fetchData()
     } catch (error) {
-      console.error("Error deleting bill:", error)
     }
   }
 
@@ -266,7 +259,6 @@ export default function OverviewPage() {
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return null
-    // Parse date string as local date to avoid timezone issues
     const [year, month, day] = dateString.split("-").map(Number)
     const date = new Date(year, month - 1, day)
     return date.toLocaleDateString("de-DE", {
@@ -300,7 +292,6 @@ export default function OverviewPage() {
   }
 
   const formatDateKey = (date: Date) => {
-    // Format date in local timezone to avoid timezone issues
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, "0")
     const day = String(date.getDate()).padStart(2, "0")
@@ -311,14 +302,12 @@ export default function OverviewPage() {
     const dateKey = formatDateKey(date)
     const dateTodos = todos.filter((todo) => {
       if (!todo.dueDate || todo.completed) return false
-      // Parse date string as local date to avoid timezone issues
       const [year, month, day] = todo.dueDate.split("T")[0].split("-").map(Number)
       const todoDate = new Date(year, month - 1, day)
       return formatDateKey(todoDate) === dateKey
     })
     const dateBills = bills.filter((bill) => {
       if (!bill.dueDate || bill.paid) return false
-      // Parse date string as local date to avoid timezone issues
       const [year, month, day] = bill.dueDate.split("T")[0].split("-").map(Number)
       const billDate = new Date(year, month - 1, day)
       return formatDateKey(billDate) === dateKey
@@ -361,23 +350,19 @@ export default function OverviewPage() {
 
   const calendarDays = []
   
-  // Empty cells for days before month starts
   for (let i = 0; i < firstDay; i++) {
     calendarDays.push(null)
   }
 
-  // Days of the month
   for (let day = 1; day <= daysInMonth; day++) {
     const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
     calendarDays.push(date)
   }
 
-  // Group items by date for easier lookup
   const itemsByDate: Record<string, { todos: Todo[]; bills: Bill[] }> = {}
   todos
     .filter((todo) => todo.dueDate && !todo.completed)
     .forEach((todo) => {
-      // Parse date string as local date to avoid timezone issues
       const dateStr = todo.dueDate!.split("T")[0]
       const [year, month, day] = dateStr.split("-").map(Number)
       const todoDate = new Date(year, month - 1, day)
@@ -388,7 +373,6 @@ export default function OverviewPage() {
   bills
     .filter((bill) => bill.dueDate && !bill.paid)
     .forEach((bill) => {
-      // Parse date string as local date to avoid timezone issues
       const dateStr = bill.dueDate!.split("T")[0]
       const [year, month, day] = dateStr.split("-").map(Number)
       const billDate = new Date(year, month - 1, day)
@@ -471,7 +455,6 @@ export default function OverviewPage() {
                 const isCurrentMonth = date.getMonth() === currentDate.getMonth()
                 const totalItems = dayItems.todos.length + dayItems.bills.length
 
-                // Check if urgent (within 3 days)
                 const todayForCalc = new Date()
                 todayForCalc.setHours(0, 0, 0, 0)
                 const dateForCalc = new Date(date)
@@ -537,7 +520,6 @@ export default function OverviewPage() {
                   .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
                   .slice(0, 10)
                   .map(([dateKey, items]) => {
-                    // Parse date string as local date to avoid timezone issues
                     const [year, month, day] = dateKey.split("-").map(Number)
                     const date = new Date(year, month - 1, day)
                     const todayForCalc = new Date()
@@ -663,7 +645,6 @@ export default function OverviewPage() {
             </div>
 
             {!dialogType ? (
-              // Show existing items and buttons to create new
               <div className="space-y-4">
                 <div className="flex gap-3 mb-6">
                   <button
@@ -758,7 +739,6 @@ export default function OverviewPage() {
                 )}
               </div>
             ) : (
-              // Show form for creating/editing
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-light text-white/60 mb-2">

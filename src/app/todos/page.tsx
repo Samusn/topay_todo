@@ -26,10 +26,14 @@ export default function TodosPage() {
   const fetchTodos = async () => {
     try {
       const response = await fetch("/api/todos")
-      const data = await response.json()
-      setTodos(data)
+      if (response.ok) {
+        const data = await response.json()
+        setTodos(Array.isArray(data) ? data : [])
+      } else {
+        setTodos([])
+      }
     } catch (error) {
-      console.error("Error fetching todos:", error)
+      setTodos([])
     } finally {
       setLoading(false)
     }
@@ -72,11 +76,9 @@ export default function TodosPage() {
         fetchTodos()
       } else {
         const errorData = await response.json()
-        console.error("Error creating/updating todo:", errorData)
         alert("Fehler: " + (errorData.error || "Unbekannter Fehler"))
       }
     } catch (error) {
-      console.error("Error creating/updating todo:", error)
     }
   }
 
@@ -106,14 +108,12 @@ export default function TodosPage() {
       
       if (!response.ok) {
         const errorData = await response.json()
-        console.error("Error updating todo:", errorData)
         alert("Fehler beim Aktualisieren des Todos: " + (errorData.error || "Unbekannter Fehler"))
         return
       }
       
       fetchTodos()
     } catch (error) {
-      console.error("Error updating todo:", error)
       alert("Fehler beim Aktualisieren des Todos. Bitte versuche es erneut.")
     }
   }
@@ -126,14 +126,12 @@ export default function TodosPage() {
       
       if (!response.ok) {
         const errorData = await response.json()
-        console.error("Error deleting todo:", errorData)
         alert("Fehler beim Löschen des Todos: " + (errorData.error || "Unbekannter Fehler"))
         return
       }
       
       fetchTodos()
     } catch (error) {
-      console.error("Error deleting todo:", error)
       alert("Fehler beim Löschen des Todos. Bitte versuche es erneut.")
     }
   }

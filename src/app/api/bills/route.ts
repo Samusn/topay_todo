@@ -5,8 +5,8 @@ export async function GET() {
   try {
     const bills = await prisma.bill.findMany({
       orderBy: [
-        { paid: "asc" }, // Unbezahlte zuerst (false kommt vor true)
-        { dueDate: "asc" }, // Bald fällige zuerst (nulls kommen automatisch zuletzt)
+        { paid: "asc" },
+        { dueDate: "asc" },
         { createdAt: "desc" },
       ],
     })

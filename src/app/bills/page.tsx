@@ -32,13 +32,17 @@ export default function BillsPage() {
   const fetchBills = async () => {
     try {
       const response = await fetch("/api/bills")
-      const data = await response.json()
-      setBills(data.map((bill: Bill) => ({
-        ...bill,
-        attachments: bill.attachments ? JSON.parse(bill.attachments as string) : null
-      })))
+      if (response.ok) {
+        const data = await response.json()
+        setBills(Array.isArray(data) ? data.map((bill: Bill) => ({
+          ...bill,
+          attachments: bill.attachments ? JSON.parse(bill.attachments as string) : null
+        })) : [])
+      } else {
+        setBills([])
+      }
     } catch (error) {
-      console.error("Error fetching bills:", error)
+      setBills([])
     } finally {
       setLoading(false)
     }
@@ -109,11 +113,9 @@ export default function BillsPage() {
         fetchBills()
       } else {
         const errorData = await response.json()
-        console.error("Error creating/updating bill:", errorData)
         alert("Fehler: " + (errorData.error || "Unbekannter Fehler"))
       }
     } catch (error) {
-      console.error("Error creating/updating bill:", error)
       alert("Fehler beim Erstellen/Aktualisieren der Rechnung. Bitte versuche es erneut.")
     }
   }
@@ -154,14 +156,12 @@ export default function BillsPage() {
 
       if (!response.ok) {
         const errorData = await response.json()
-        console.error("Error updating bill:", errorData)
         alert("Fehler beim Aktualisieren der Rechnung: " + (errorData.error || "Unbekannter Fehler"))
         return
       }
 
       fetchBills()
     } catch (error) {
-      console.error("Error updating bill:", error)
       alert("Fehler beim Aktualisieren der Rechnung. Bitte versuche es erneut.")
     }
   }
@@ -174,14 +174,12 @@ export default function BillsPage() {
 
       if (!response.ok) {
         const errorData = await response.json()
-        console.error("Error deleting bill:", errorData)
         alert("Fehler beim Löschen der Rechnung: " + (errorData.error || "Unbekannter Fehler"))
         return
       }
 
       fetchBills()
     } catch (error) {
-      console.error("Error deleting bill:", error)
       alert("Fehler beim Löschen der Rechnung. Bitte versuche es erneut.")
     }
   }

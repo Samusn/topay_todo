@@ -5,8 +5,8 @@ export async function GET() {
   try {
     const todos = await prisma.todo.findMany({
       orderBy: [
-        { completed: "asc" }, // Unerledigte zuerst (false kommt vor true)
-        { dueDate: "asc" }, // Bald fällige zuerst (nulls kommen automatisch zuletzt)
+        { completed: "asc" },
+        { dueDate: "asc" },
         { createdAt: "desc" },
       ],
     })

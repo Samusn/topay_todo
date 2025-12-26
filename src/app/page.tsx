@@ -5,10 +5,8 @@ import Link from "next/link"
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-slate-950 to-black relative overflow-hidden">
-      {/* Elegant gradient overlay - night sky effect */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-950/20 via-blue-950/10 to-black/30 pointer-events-none" />
       
-      {/* Subtle animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-blue-400/5 to-transparent rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-l from-white/5 to-transparent rounded-full blur-3xl" />
@@ -16,7 +14,6 @@ export default function Home() {
 
       <main className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-16 sm:px-8">
         <div className="w-full max-w-2xl mx-auto text-center space-y-12">
-          {/* Main Title */}
           <div className="space-y-6">
             <h1 className="text-7xl sm:text-5xl md:text-6xl lg:text-7xl font-medium tracking-tight">
               <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
@@ -31,7 +28,6 @@ export default function Home() {
             </h1>
           </div>
 
-          {/* Navigation Links - iOS Style */}
           <nav className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-8 pt-8">
             <Link
               href="/todos"
@@ -62,13 +58,11 @@ export default function Home() {
             </Link>
           </nav>
 
-          {/* Subtle decorative line */}
           <div className="pt-12 flex items-center justify-center">
             <div className="h-px w-24 bg-gradient-to-r from-transparent via-neutral-500/30 to-transparent" />
           </div>
         </div>
 
-        {/* Footer */}
         <div className="absolute bottom-8 left-0 right-0 text-center">
           <p className="text-white/30 text-xs font-light tracking-wider">
             © Samuel Soun
