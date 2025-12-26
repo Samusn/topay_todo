@@ -266,7 +266,7 @@ export default function TodosPage() {
           ) : todos.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-white/40 text-sm font-light">
-                Keine Todos vorhanden. Erstelle dein erstes Todo!
+                Keine Todos vorhanden.
               </p>
             </div>
           ) : (

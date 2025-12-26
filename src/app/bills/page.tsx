@@ -387,7 +387,7 @@ export default function BillsPage() {
           ) : bills.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-white/40 text-sm font-light">
-                Keine Rechnungen vorhanden. Erstelle deine erste Rechnung!
+                Keine Rechnungen vorhanden.
               </p>
             </div>
           ) : (
