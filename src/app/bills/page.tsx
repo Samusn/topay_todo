@@ -201,6 +201,53 @@ export default function BillsPage() {
     }).format(amount)
   }
 
+  const openAttachment = (base64String: string, index: number) => {
+    try {
+      // Extract base64 data (remove data URL prefix if present)
+      const base64Data = base64String.includes(',') 
+        ? base64String.split(',')[1] 
+        : base64String
+      
+      // Determine MIME type from base64 string
+      const mimeMatch = base64String.match(/data:([^;]+);/)
+      const mimeType = mimeMatch ? mimeMatch[1] : 'application/pdf'
+      
+      // Get file extension from MIME type
+      const extensionMap: { [key: string]: string } = {
+        'application/pdf': 'pdf',
+        'image/jpeg': 'jpg',
+        'image/jpg': 'jpg',
+        'image/png': 'png',
+        'image/gif': 'gif',
+        'image/webp': 'webp',
+        'image/svg+xml': 'svg',
+      }
+      const extension = extensionMap[mimeType] || mimeType.split('/')[1] || 'pdf'
+      
+      // Convert base64 to binary
+      const binaryString = atob(base64Data)
+      const bytes = new Uint8Array(binaryString.length)
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i)
+      }
+      
+      // Create blob
+      const blob = new Blob([bytes], { type: mimeType })
+      const url = URL.createObjectURL(blob)
+      
+      // Open directly in a new window/tab - on macOS, this will open in Preview
+      // if Preview is the default app for PDFs and images
+      window.open(url, '_blank')
+      
+      // Clean up the URL after a delay to allow the file to open
+      // We keep it longer since the browser needs to keep the blob URL alive
+      setTimeout(() => URL.revokeObjectURL(url), 60000)
+    } catch (error) {
+      console.error('Fehler beim Öffnen der Datei:', error)
+      alert('Fehler beim Öffnen der Datei. Bitte versuche es erneut.')
+    }
+  }
+
   const unpaidBills = bills.filter((bill) => !bill.paid)
   const totalUnpaid = unpaidBills.reduce((sum, bill) => sum + bill.amount, 0)
 
@@ -469,10 +516,26 @@ export default function BillsPage() {
                           <span>Bezahlt: {formatDate(bill.paidDate)}</span>
                         )}
                         {bill.attachments && Array.isArray(bill.attachments) && bill.attachments.length > 0 && (
-                          <span className="flex items-center gap-1">
-                            <Paperclip className="w-3 h-3" />
-                            {bill.attachments.length} Datei{bill.attachments.length > 1 ? "en" : ""}
-                          </span>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="flex items-center gap-1">
+                              <Paperclip className="w-3 h-3" />
+                              {bill.attachments.length} Datei{bill.attachments.length > 1 ? "en" : ""}:
+                            </span>
+                            {bill.attachments.map((attachment, idx) => (
+                              <button
+                                key={idx}
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  openAttachment(attachment, idx)
+                                }}
+                                className="text-xs text-blue-400/80 hover:text-blue-300 underline decoration-dotted underline-offset-2 transition-colors"
+                                title="Datei in Preview öffnen"
+                              >
+                                Datei {idx + 1}
+                              </button>
+                            ))}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -571,10 +634,26 @@ export default function BillsPage() {
                                   <span>Bezahlt: {formatDate(bill.paidDate)}</span>
                                 )}
                                 {bill.attachments && Array.isArray(bill.attachments) && bill.attachments.length > 0 && (
-                                  <span className="flex items-center gap-1">
-                                    <Paperclip className="w-3 h-3" />
-                                    {bill.attachments.length} Datei{bill.attachments.length > 1 ? "en" : ""}
-                                  </span>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="flex items-center gap-1">
+                                      <Paperclip className="w-3 h-3" />
+                                      {bill.attachments.length} Datei{bill.attachments.length > 1 ? "en" : ""}:
+                                    </span>
+                                    {bill.attachments.map((attachment, idx) => (
+                                      <button
+                                        key={idx}
+                                        onClick={(e) => {
+                                          e.preventDefault()
+                                          e.stopPropagation()
+                                          openAttachment(attachment, idx)
+                                        }}
+                                        className="text-xs text-blue-400/80 hover:text-blue-300 underline decoration-dotted underline-offset-2 transition-colors"
+                                        title="Datei in Preview öffnen"
+                                      >
+                                        Datei {idx + 1}
+                                      </button>
+                                    ))}
+                                  </div>
                                 )}
                               </div>
                             </div>
