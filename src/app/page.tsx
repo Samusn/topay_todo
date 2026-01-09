@@ -31,7 +31,7 @@ export default function Home() {
           <nav className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-8 pt-8">
             <Link
               href="/todos"
-              className="group relative text-white/80 hover:text-white transition-all duration-300 text-base font-light tracking-wide uppercase"
+              className="group relative text-white/80 hover:text-white active:text-white/90 transition-all duration-300 text-base font-light tracking-wide uppercase py-2 px-4 min-h-[44px] flex items-center justify-center touch-manipulation"
             >
               <span className="relative z-10">To Do</span>
               <span className="absolute bottom-0 left-0 w-0 h-px bg-gradient-to-r from-neutral-400 to-transparent group-hover:w-full transition-all duration-300" />
@@ -41,7 +41,7 @@ export default function Home() {
             
             <Link
               href="/bills"
-              className="group relative text-white/80 hover:text-white transition-all duration-300 text-base font-light tracking-wide uppercase"
+              className="group relative text-white/80 hover:text-white active:text-white/90 transition-all duration-300 text-base font-light tracking-wide uppercase py-2 px-4 min-h-[44px] flex items-center justify-center touch-manipulation"
             >
               <span className="relative z-10">To Pay</span>
               <span className="absolute bottom-0 left-0 w-0 h-px bg-gradient-to-r from-neutral-400 to-transparent group-hover:w-full transition-all duration-300" />
@@ -51,7 +51,7 @@ export default function Home() {
             
             <Link
               href="/overview"
-              className="group relative text-white/80 hover:text-white transition-all duration-300 text-base font-light tracking-wide uppercase"
+              className="group relative text-white/80 hover:text-white active:text-white/90 transition-all duration-300 text-base font-light tracking-wide uppercase py-2 px-4 min-h-[44px] flex items-center justify-center touch-manipulation"
             >
               <span className="relative z-10">Übersicht</span>
               <span className="absolute bottom-0 left-0 w-0 h-px bg-gradient-to-r from-neutral-400 to-transparent group-hover:w-full transition-all duration-300" />

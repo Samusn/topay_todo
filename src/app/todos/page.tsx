@@ -186,7 +186,7 @@ export default function TodosPage() {
           <div className="mb-8 sm:mb-12">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 text-white/60 hover:text-white transition-colors mb-6 text-sm font-light tracking-wide"
+              className="inline-flex items-center gap-2 text-white/60 hover:text-white active:text-white/90 transition-colors mb-6 text-sm font-light tracking-wide py-2 px-1 min-h-[44px] touch-manipulation"
             >
               <ArrowLeft className="w-4 h-4" />
               Zurück
@@ -202,7 +202,7 @@ export default function TodosPage() {
           <div className="mb-8">
             <button
               onClick={() => setIsDialogOpen(true)}
-              className="flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-white/80 hover:text-white transition-all duration-300 text-sm font-light tracking-wide uppercase"
+              className="flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 min-h-[48px] sm:min-h-[44px] bg-white/5 hover:bg-white/10 active:bg-white/15 border border-white/10 hover:border-white/20 rounded-lg text-white/80 hover:text-white transition-all duration-300 text-sm font-light tracking-wide uppercase touch-manipulation"
             >
               <Plus className="w-4 h-4" />
               Neues Todo
@@ -223,7 +223,7 @@ export default function TodosPage() {
                   </h2>
                   <button
                     onClick={handleCancel}
-                    className="text-white/40 hover:text-white transition-colors"
+                    className="p-2 min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center text-white/40 hover:text-white active:text-white/90 transition-colors active:scale-95 touch-manipulation"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -246,7 +246,7 @@ export default function TodosPage() {
                         if (e.key === "Enter") handleCreate()
                       }}
                       placeholder="Todo Titel"
-                      className={`w-full px-4 py-2 bg-white/5 border rounded-lg text-white placeholder-white/30 focus:outline-none transition-colors ${
+                      className={`w-full px-4 py-3 sm:py-2 min-h-[48px] sm:min-h-[44px] bg-white/5 border rounded-lg text-white placeholder-white/30 focus:outline-none transition-colors touch-manipulation ${
                         errors.title ? "border-red-400/50 focus:border-red-400" : "border-white/10 focus:border-white/30"
                       }`}
                       autoFocus
@@ -272,7 +272,7 @@ export default function TodosPage() {
                         if (e.key === "Enter") handleCreate()
                       }}
                       placeholder="Optionale Beschreibung"
-                      className={`w-full px-4 py-2 bg-white/5 border rounded-lg text-white placeholder-white/30 focus:outline-none transition-colors ${
+                      className={`w-full px-4 py-3 sm:py-2 min-h-[48px] sm:min-h-[44px] bg-white/5 border rounded-lg text-white placeholder-white/30 focus:outline-none transition-colors touch-manipulation ${
                         errors.description ? "border-red-400/50 focus:border-red-400" : "border-white/10 focus:border-white/30"
                       }`}
                     />
@@ -294,7 +294,7 @@ export default function TodosPage() {
                             setErrors({ ...errors, dueDate: "" })
                           }
                         }}
-                        className={`w-full px-3 sm:px-4 py-2 bg-white/5 border rounded-lg text-white focus:outline-none transition-colors [color-scheme:dark] ${
+                        className={`w-full px-3 sm:px-4 py-3 sm:py-2 min-h-[48px] sm:min-h-[44px] bg-white/5 border rounded-lg text-white focus:outline-none transition-colors [color-scheme:dark] touch-manipulation ${
                           errors.dueDate ? "border-red-400/50 focus:border-red-400" : "border-white/10 focus:border-white/30"
                         }`}
                         style={{ maxWidth: '100%', boxSizing: 'border-box', minWidth: 0, width: '100%' }}
@@ -308,13 +308,13 @@ export default function TodosPage() {
                 <div className="flex gap-3 mt-6">
                   <button
                     onClick={handleCancel}
-                    className="flex-1 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white/80 hover:text-white transition-all text-sm font-light"
+                    className="flex-1 px-4 py-3 sm:py-2 min-h-[48px] sm:min-h-[44px] bg-white/5 hover:bg-white/10 active:bg-white/15 border border-white/10 rounded-lg text-white/80 hover:text-white transition-all text-sm font-light touch-manipulation"
                   >
                     Abbrechen
                   </button>
                   <button
                     onClick={handleCreate}
-                    className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white transition-all text-sm font-light"
+                    className="flex-1 px-4 py-3 sm:py-2 min-h-[48px] sm:min-h-[44px] bg-white/10 hover:bg-white/20 active:bg-white/25 border border-white/20 rounded-lg text-white transition-all text-sm font-light touch-manipulation"
                   >
                     {editingTodo ? "Speichern" : "Erstellen"}
                   </button>
@@ -351,7 +351,7 @@ export default function TodosPage() {
                         handleToggle(todo.id, todo.completed)
                       }}
                       type="button"
-                      className={`mt-1 flex-shrink-0 w-7 h-7 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${
+                      className={`mt-1 flex-shrink-0 w-10 h-10 sm:w-8 sm:h-8 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer active:scale-95 ${
                         todo.completed
                           ? "bg-white/20 border-white/40"
                           : "border-white/30 hover:border-white/50 hover:bg-white/5"
@@ -405,7 +405,7 @@ export default function TodosPage() {
                         )
                       })()}
                     </div>
-                    <div className="flex items-center gap-2 sm:gap-1 flex-shrink-0">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       <button
                         onClick={(e) => {
                           e.preventDefault()
@@ -413,7 +413,7 @@ export default function TodosPage() {
                           handleEdit(todo)
                         }}
                         type="button"
-                        className="p-2 sm:p-1.5 text-white/60 hover:text-white/90 hover:bg-white/5 rounded transition-all active:scale-95"
+                        className="p-2.5 min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center text-white/60 hover:text-white/90 hover:bg-white/5 rounded transition-all active:scale-95 touch-manipulation"
                         title="Bearbeiten"
                         aria-label="Bearbeiten"
                       >
@@ -428,7 +428,7 @@ export default function TodosPage() {
                           }
                         }}
                         type="button"
-                        className="p-2 sm:p-1.5 text-white/60 hover:text-red-400/90 hover:bg-white/5 rounded transition-all active:scale-95"
+                        className="p-2.5 min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center text-white/60 hover:text-red-400/90 hover:bg-white/5 rounded transition-all active:scale-95 touch-manipulation"
                         title="Löschen"
                         aria-label="Löschen"
                       >
@@ -443,7 +443,7 @@ export default function TodosPage() {
                 <div className="pt-4 border-t border-white/10">
                   <button
                     onClick={() => setShowCompleted(!showCompleted)}
-                    className="flex items-center gap-2 w-full text-sm text-white/50 hover:text-white/70 transition-colors py-2"
+                    className="flex items-center gap-2 w-full text-sm text-white/50 hover:text-white/70 active:text-white/80 transition-colors py-3 min-h-[48px] touch-manipulation"
                   >
                     {showCompleted ? (
                       <ChevronUp className="w-4 h-4" />
@@ -470,7 +470,7 @@ export default function TodosPage() {
                                 handleToggle(todo.id, todo.completed)
                               }}
                               type="button"
-                              className="mt-1 flex-shrink-0 w-7 h-7 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer bg-white/20 border-white/40"
+                              className="mt-1 flex-shrink-0 w-10 h-10 sm:w-8 sm:h-8 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer bg-white/20 border-white/40 active:scale-95"
                             >
                               <Check className="w-4 h-4 text-white" />
                             </button>
@@ -493,7 +493,7 @@ export default function TodosPage() {
                                 </p>
                               )}
                             </div>
-                            <div className="flex items-center gap-2 sm:gap-1 flex-shrink-0">
+                            <div className="flex items-center gap-2 flex-shrink-0">
                               <button
                                 onClick={(e) => {
                                   e.preventDefault()
@@ -501,7 +501,7 @@ export default function TodosPage() {
                                   handleEdit(todo)
                                 }}
                                 type="button"
-                                className="p-2 sm:p-1.5 text-white/60 hover:text-white/90 hover:bg-white/5 rounded transition-all active:scale-95"
+                                className="p-2.5 min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center text-white/60 hover:text-white/90 hover:bg-white/5 rounded transition-all active:scale-95 touch-manipulation"
                                 title="Bearbeiten"
                                 aria-label="Bearbeiten"
                               >
@@ -516,7 +516,7 @@ export default function TodosPage() {
                                   }
                                 }}
                                 type="button"
-                                className="p-2 sm:p-1.5 text-white/60 hover:text-red-400/90 hover:bg-white/5 rounded transition-all active:scale-95"
+                                className="p-2.5 min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center text-white/60 hover:text-red-400/90 hover:bg-white/5 rounded transition-all active:scale-95 touch-manipulation"
                                 title="Löschen"
                                 aria-label="Löschen"
                               >

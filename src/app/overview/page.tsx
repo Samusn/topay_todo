@@ -456,7 +456,7 @@ export default function OverviewPage() {
           <div className="mb-8 sm:mb-12">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 text-white/60 hover:text-white transition-colors mb-6 text-sm font-light tracking-wide"
+              className="inline-flex items-center gap-2 text-white/60 hover:text-white active:text-white/90 transition-colors mb-6 text-sm font-light tracking-wide py-2 px-1 min-h-[44px] touch-manipulation"
             >
               <ArrowLeft className="w-4 h-4" />
               Zurück
@@ -477,7 +477,7 @@ export default function OverviewPage() {
             <div className="flex items-center justify-between mb-6">
               <button
                 onClick={() => navigateMonth("prev")}
-                className="p-2 text-white/60 hover:text-white transition-colors"
+                className="p-3 min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center text-white/60 hover:text-white active:text-white/90 transition-colors active:scale-95 touch-manipulation"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
@@ -486,7 +486,7 @@ export default function OverviewPage() {
               </h2>
               <button
                 onClick={() => navigateMonth("next")}
-                className="p-2 text-white/60 hover:text-white transition-colors"
+                className="p-3 min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center text-white/60 hover:text-white active:text-white/90 transition-colors active:scale-95 touch-manipulation"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -531,7 +531,7 @@ export default function OverviewPage() {
                   <button
                     key={dateKey}
                     onClick={() => handleDateClick(date)}
-                    className={`aspect-square p-1 sm:p-2 border border-white/10 rounded-lg transition-all text-left cursor-pointer hover:bg-white/10 ${
+                    className={`aspect-square p-2 sm:p-2 border border-white/10 rounded-lg transition-all text-left cursor-pointer hover:bg-white/10 active:bg-white/15 active:scale-95 touch-manipulation min-h-[44px] ${
                       isToday
                         ? "bg-white/10 border-white/30"
                         : isOverdue
@@ -639,7 +639,7 @@ export default function OverviewPage() {
                                   e.stopPropagation()
                                   handleToggleTodo(todo.id, todo.completed)
                                 }}
-                                className={`mt-0.5 flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${
+                                className={`mt-0.5 flex-shrink-0 w-8 h-8 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer active:scale-95 ${
                                   todo.completed
                                     ? "bg-white/20 border-white/40"
                                     : "border-white/30 hover:border-white/50 hover:bg-white/5"
@@ -677,7 +677,7 @@ export default function OverviewPage() {
                                   e.stopPropagation()
                                   handleToggleBill(bill.id, bill.paid)
                                 }}
-                                className={`mt-0.5 flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${
+                                className={`mt-0.5 flex-shrink-0 w-8 h-8 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer active:scale-95 ${
                                   bill.paid
                                     ? "bg-white/20 border-white/40"
                                     : "border-white/30 hover:border-white/50 hover:bg-white/5"
@@ -728,7 +728,7 @@ export default function OverviewPage() {
               <div className="mt-8 pt-8 border-t border-white/10">
                 <button
                   onClick={() => setShowCompleted(!showCompleted)}
-                  className="flex items-center gap-2 w-full text-sm text-white/50 hover:text-white/70 transition-colors py-2"
+                  className="flex items-center gap-2 w-full text-sm text-white/50 hover:text-white/70 active:text-white/80 transition-colors py-3 min-h-[48px] touch-manipulation"
                 >
                   {showCompleted ? (
                     <ChevronUp className="w-4 h-4" />
@@ -752,7 +752,7 @@ export default function OverviewPage() {
                             e.stopPropagation()
                             handleToggleTodo(todo.id, todo.completed)
                           }}
-                          className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer bg-white/20 border-white/40"
+                          className="mt-0.5 flex-shrink-0 w-8 h-8 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer bg-white/20 border-white/40 active:scale-95"
                         >
                           <Check className="w-3 h-3 text-white" />
                         </button>
@@ -789,7 +789,7 @@ export default function OverviewPage() {
                             e.stopPropagation()
                             handleToggleBill(bill.id, bill.paid)
                           }}
-                          className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer bg-white/20 border-white/40"
+                          className="mt-0.5 flex-shrink-0 w-8 h-8 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer bg-white/20 border-white/40 active:scale-95"
                         >
                           <Check className="w-3 h-3 text-white" />
                         </button>
@@ -849,7 +849,7 @@ export default function OverviewPage() {
               </div>
               <button
                 onClick={resetDialog}
-                className="text-white/40 hover:text-white transition-colors"
+                className="p-2 min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center text-white/40 hover:text-white active:text-white/90 transition-colors active:scale-95 touch-manipulation"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -886,7 +886,7 @@ export default function OverviewPage() {
                             e.stopPropagation()
                             handleToggleTodo(todo.id, todo.completed)
                           }}
-                          className={`mt-0.5 flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${
+                          className={`mt-0.5 flex-shrink-0 w-8 h-8 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer active:scale-95 ${
                             todo.completed
                               ? "bg-white/20 border-white/40"
                               : "border-white/30 hover:border-white/50 hover:bg-white/5"
@@ -917,7 +917,7 @@ export default function OverviewPage() {
                               e.stopPropagation()
                               handleEditTodo(todo)
                             }}
-                            className="p-2 text-white/60 hover:text-white/90 hover:bg-white/5 rounded transition-all"
+                            className="p-2.5 min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center text-white/60 hover:text-white/90 hover:bg-white/5 rounded transition-all active:scale-95 touch-manipulation"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
@@ -926,7 +926,7 @@ export default function OverviewPage() {
                               e.stopPropagation()
                               handleDeleteTodo(todo.id)
                             }}
-                            className="p-2 text-white/60 hover:text-red-400/90 hover:bg-white/5 rounded transition-all"
+                            className="p-2.5 min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center text-white/60 hover:text-red-400/90 hover:bg-white/5 rounded transition-all active:scale-95 touch-manipulation"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -944,7 +944,7 @@ export default function OverviewPage() {
                             e.stopPropagation()
                             handleToggleBill(bill.id, bill.paid)
                           }}
-                          className={`mt-0.5 flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${
+                          className={`mt-0.5 flex-shrink-0 w-8 h-8 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer active:scale-95 ${
                             bill.paid
                               ? "bg-white/20 border-white/40"
                               : "border-white/30 hover:border-white/50 hover:bg-white/5"
@@ -980,7 +980,7 @@ export default function OverviewPage() {
                               e.stopPropagation()
                               handleEditBill(bill)
                             }}
-                            className="p-2 text-white/60 hover:text-white/90 hover:bg-white/5 rounded transition-all"
+                            className="p-2.5 min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center text-white/60 hover:text-white/90 hover:bg-white/5 rounded transition-all active:scale-95 touch-manipulation"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
@@ -989,7 +989,7 @@ export default function OverviewPage() {
                               e.stopPropagation()
                               handleDeleteBill(bill.id)
                             }}
-                            className="p-2 text-white/60 hover:text-red-400/90 hover:bg-white/5 rounded transition-all"
+                            className="p-2.5 min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center text-white/60 hover:text-red-400/90 hover:bg-white/5 rounded transition-all active:scale-95 touch-manipulation"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -1010,7 +1010,7 @@ export default function OverviewPage() {
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
                     placeholder={dialogType === "todo" ? "Todo Titel" : "Rechnung Titel"}
-                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-colors"
+                    className="w-full px-4 py-3 sm:py-2 min-h-[48px] sm:min-h-[44px] bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-colors touch-manipulation"
                     autoFocus
                   />
                 </div>
@@ -1026,7 +1026,7 @@ export default function OverviewPage() {
                       value={newAmount}
                       onChange={(e) => setNewAmount(e.target.value)}
                       placeholder="0.00"
-                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-colors"
+                      className="w-full px-4 py-3 sm:py-2 min-h-[48px] sm:min-h-[44px] bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-colors touch-manipulation"
                     />
                   </div>
                 )}
@@ -1040,7 +1040,7 @@ export default function OverviewPage() {
                       type="date"
                       value={newDueDate}
                       onChange={(e) => setNewDueDate(e.target.value)}
-                      className="w-full px-3 sm:px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-white/30 transition-colors [color-scheme:dark]"
+                      className="w-full px-3 sm:px-4 py-3 sm:py-2 min-h-[48px] sm:min-h-[44px] bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-white/30 transition-colors [color-scheme:dark] touch-manipulation"
                       style={{ maxWidth: '100%', boxSizing: 'border-box', minWidth: 0, width: '100%' }}
                     />
                   </div>
@@ -1062,13 +1062,13 @@ export default function OverviewPage() {
                 <div className="flex gap-3 mt-6">
                   <button
                     onClick={resetDialog}
-                    className="flex-1 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white/80 hover:text-white transition-all text-sm font-light"
+                    className="flex-1 px-4 py-3 sm:py-2 min-h-[48px] sm:min-h-[44px] bg-white/5 hover:bg-white/10 active:bg-white/15 border border-white/10 rounded-lg text-white/80 hover:text-white transition-all text-sm font-light touch-manipulation"
                   >
                     Abbrechen
                   </button>
                   <button
                     onClick={dialogType === "todo" ? handleCreateTodo : handleCreateBill}
-                    className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white transition-all text-sm font-light"
+                    className="flex-1 px-4 py-3 sm:py-2 min-h-[48px] sm:min-h-[44px] bg-white/10 hover:bg-white/20 active:bg-white/25 border border-white/20 rounded-lg text-white transition-all text-sm font-light touch-manipulation"
                   >
                     {editingTodo || editingBill ? "Speichern" : "Erstellen"}
                   </button>
