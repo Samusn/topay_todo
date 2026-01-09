@@ -211,12 +211,12 @@ export default function TodosPage() {
 
           {/* Dialog for creating/editing todo */}
           {isDialogOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
               <div 
                 className="absolute inset-0 bg-black/80 backdrop-blur-sm"
                 onClick={handleCancel}
               />
-              <div className="relative bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-xl p-6 sm:p-8 w-full max-w-md">
+              <div className="relative bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-xl p-3 sm:p-6 sm:p-8 w-full sm:w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto overflow-x-hidden">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-medium text-white">
                     {editingTodo ? "Todo bearbeiten" : "Neues Todo"}
@@ -228,7 +228,7 @@ export default function TodosPage() {
                     <X className="w-5 h-5" />
                   </button>
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-4 w-full" style={{ maxWidth: '100%', overflowX: 'hidden' }}>
                   <div>
                     <label className="block text-sm font-light text-white/60 mb-2">
                       Titel
@@ -280,23 +280,26 @@ export default function TodosPage() {
                       <p className="mt-1 text-xs text-red-400">{errors.description}</p>
                     )}
                   </div>
-                  <div>
+                  <div className="w-full">
                     <label className="block text-sm font-light text-white/60 mb-2">
                       Fälligkeitsdatum (optional)
                     </label>
-                    <input
-                      type="date"
-                      value={newDueDate}
-                      onChange={(e) => {
-                        setNewDueDate(e.target.value)
-                        if (errors.dueDate) {
-                          setErrors({ ...errors, dueDate: "" })
-                        }
-                      }}
-                      className={`w-full px-4 py-2 bg-white/5 border rounded-lg text-white focus:outline-none transition-colors [color-scheme:dark] ${
-                        errors.dueDate ? "border-red-400/50 focus:border-red-400" : "border-white/10 focus:border-white/30"
-                      }`}
-                    />
+                    <div className="w-full overflow-hidden">
+                      <input
+                        type="date"
+                        value={newDueDate}
+                        onChange={(e) => {
+                          setNewDueDate(e.target.value)
+                          if (errors.dueDate) {
+                            setErrors({ ...errors, dueDate: "" })
+                          }
+                        }}
+                        className={`w-full px-3 sm:px-4 py-2 bg-white/5 border rounded-lg text-white focus:outline-none transition-colors [color-scheme:dark] ${
+                          errors.dueDate ? "border-red-400/50 focus:border-red-400" : "border-white/10 focus:border-white/30"
+                        }`}
+                        style={{ maxWidth: '100%', boxSizing: 'border-box', minWidth: 0, width: '100%' }}
+                      />
+                    </div>
                     {errors.dueDate && (
                       <p className="mt-1 text-xs text-red-400">{errors.dueDate}</p>
                     )}

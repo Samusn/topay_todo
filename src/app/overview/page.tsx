@@ -835,7 +835,7 @@ export default function OverviewPage() {
             className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             onClick={resetDialog}
           />
-          <div className="relative bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-xl p-6 sm:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="relative bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-xl p-3 sm:p-6 sm:p-8 w-[calc(100%-2rem)] sm:w-full max-w-2xl mx-auto max-h-[90vh] overflow-y-auto overflow-x-hidden">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-xl font-medium text-white">
@@ -1031,16 +1031,19 @@ export default function OverviewPage() {
                   </div>
                 )}
 
-                <div>
+                <div className="w-full">
                   <label className="block text-sm font-light text-white/60 mb-2">
                     Fälligkeitsdatum
                   </label>
-                  <input
-                    type="date"
-                    value={newDueDate}
-                    onChange={(e) => setNewDueDate(e.target.value)}
-                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-white/30 transition-colors [color-scheme:dark]"
-                  />
+                  <div className="w-full overflow-hidden">
+                    <input
+                      type="date"
+                      value={newDueDate}
+                      onChange={(e) => setNewDueDate(e.target.value)}
+                      className="w-full px-3 sm:px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-white/30 transition-colors [color-scheme:dark]"
+                      style={{ maxWidth: '100%', boxSizing: 'border-box', minWidth: 0, width: '100%' }}
+                    />
+                  </div>
                 </div>
 
                 <div>
