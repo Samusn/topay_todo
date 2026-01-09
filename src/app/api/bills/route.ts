@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { createBillSchema } from "@/lib/schemas"
 
 export async function GET() {
   try {
@@ -23,20 +24,33 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { title, description, amount, dueDate, attachments } = body
+    
+    // Validate with Zod
+    const validationResult = createBillSchema.safeParse({
+      ...body,
+      amount: typeof body.amount === 'string' ? parseFloat(body.amount) : body.amount,
+    })
 
-    if (!title || amount === undefined) {
+    if (!validationResult.success) {
       return NextResponse.json(
-        { error: "Title and amount are required" },
+        { 
+          error: "Validierungsfehler",
+          details: validationResult.error.errors.map((err: { path: (string | number)[]; message: string }) => ({
+            field: err.path.join('.'),
+            message: err.message,
+          }))
+        },
         { status: 400 }
       )
     }
+
+    const { title, description, amount, dueDate, attachments } = validationResult.data
 
     const bill = await prisma.bill.create({
       data: {
         title,
         description: description || null,
-        amount: parseFloat(amount),
+        amount,
         dueDate: dueDate ? new Date(dueDate) : null,
         attachments: attachments ? JSON.stringify(attachments) : null,
       },

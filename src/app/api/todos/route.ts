@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { createTodoSchema } from "@/lib/schemas"
 
 export async function GET() {
   try {
@@ -23,14 +24,24 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { title, description, dueDate } = body
+    
+    // Validate with Zod
+    const validationResult = createTodoSchema.safeParse(body)
 
-    if (!title) {
+    if (!validationResult.success) {
       return NextResponse.json(
-        { error: "Title is required" },
+        { 
+          error: "Validierungsfehler",
+          details: validationResult.error.errors.map((err: { path: (string | number)[]; message: string }) => ({
+            field: err.path.join('.'),
+            message: err.message,
+          }))
+        },
         { status: 400 }
       )
     }
+
+    const { title, description, dueDate } = validationResult.data
 
     const todo = await prisma.todo.create({
       data: {

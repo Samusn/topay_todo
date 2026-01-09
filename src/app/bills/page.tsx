@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { ArrowLeft, Plus, X, CheckCircle2, Circle, Trash2, Edit2, Paperclip, XCircle, ChevronDown, ChevronUp } from "lucide-react"
+import { billFormSchema } from "@/lib/schemas"
 
 interface Bill {
   id: string
@@ -29,6 +30,7 @@ export default function BillsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(true)
   const [showCompleted, setShowCompleted] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const fetchBills = async () => {
     try {
@@ -76,7 +78,26 @@ export default function BillsPage() {
   }
 
   const handleCreate = async () => {
-    if (!newTitle.trim() || !newAmount.trim()) return
+    // Clear previous errors
+    setErrors({})
+
+    // Validate with Zod
+    const validationResult = billFormSchema.safeParse({
+      title: newTitle,
+      description: newDescription,
+      amount: newAmount,
+      dueDate: newDueDate,
+    })
+
+      if (!validationResult.success) {
+        const fieldErrors: Record<string, string> = {}
+        validationResult.error.errors.forEach((err: { path: (string | number)[]; message: string }) => {
+          const field = err.path[0] as string
+          fieldErrors[field] = err.message
+        })
+        setErrors(fieldErrors)
+        return
+      }
 
     try {
       const response = editingBill
@@ -84,10 +105,10 @@ export default function BillsPage() {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              title: newTitle,
-              description: newDescription || null,
-              amount: parseFloat(newAmount),
-              dueDate: newDueDate || null,
+              title: validationResult.data.title,
+              description: validationResult.data.description || null,
+              amount: parseFloat(validationResult.data.amount),
+              dueDate: validationResult.data.dueDate || null,
               attachments: attachments.length > 0 ? attachments : null,
             }),
           })
@@ -95,10 +116,10 @@ export default function BillsPage() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              title: newTitle,
-              description: newDescription || null,
-              amount: parseFloat(newAmount),
-              dueDate: newDueDate || null,
+              title: validationResult.data.title,
+              description: validationResult.data.description || null,
+              amount: parseFloat(validationResult.data.amount),
+              dueDate: validationResult.data.dueDate || null,
               attachments: attachments.length > 0 ? attachments : null,
             }),
           })
@@ -109,12 +130,22 @@ export default function BillsPage() {
         setNewAmount("")
         setNewDueDate("")
         setAttachments([])
+        setErrors({})
         setIsDialogOpen(false)
         setEditingBill(null)
         fetchBills()
       } else {
         const errorData = await response.json()
-        alert("Fehler: " + (errorData.error || "Unbekannter Fehler"))
+        // Handle validation errors from backend
+        if (errorData.details && Array.isArray(errorData.details)) {
+          const fieldErrors: Record<string, string> = {}
+          errorData.details.forEach((err: { field: string; message: string }) => {
+            fieldErrors[err.field] = err.message
+          })
+          setErrors(fieldErrors)
+        } else {
+          alert("Fehler: " + (errorData.error || "Unbekannter Fehler"))
+        }
       }
     } catch (error) {
       alert("Fehler beim Erstellen/Aktualisieren der Rechnung. Bitte versuche es erneut.")
@@ -142,6 +173,7 @@ export default function BillsPage() {
     setNewAmount("")
     setNewDueDate("")
     setAttachments([])
+    setErrors({})
   }
 
   const handleTogglePaid = async (id: string, paid: boolean) => {
@@ -323,11 +355,21 @@ export default function BillsPage() {
                     <input
                       type="text"
                       value={newTitle}
-                      onChange={(e) => setNewTitle(e.target.value)}
+                      onChange={(e) => {
+                        setNewTitle(e.target.value)
+                        if (errors.title) {
+                          setErrors({ ...errors, title: "" })
+                        }
+                      }}
                       placeholder="Rechnung Titel"
-                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-colors"
+                      className={`w-full px-4 py-2 bg-white/5 border rounded-lg text-white placeholder-white/30 focus:outline-none transition-colors ${
+                        errors.title ? "border-red-400/50 focus:border-red-400" : "border-white/10 focus:border-white/30"
+                      }`}
                       autoFocus
                     />
+                    {errors.title && (
+                      <p className="mt-1 text-xs text-red-400">{errors.title}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-light text-white/60 mb-2">
@@ -337,10 +379,20 @@ export default function BillsPage() {
                       type="number"
                       step="0.01"
                       value={newAmount}
-                      onChange={(e) => setNewAmount(e.target.value)}
+                      onChange={(e) => {
+                        setNewAmount(e.target.value)
+                        if (errors.amount) {
+                          setErrors({ ...errors, amount: "" })
+                        }
+                      }}
                       placeholder="0.00"
-                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-colors"
+                      className={`w-full px-4 py-2 bg-white/5 border rounded-lg text-white placeholder-white/30 focus:outline-none transition-colors ${
+                        errors.amount ? "border-red-400/50 focus:border-red-400" : "border-white/10 focus:border-white/30"
+                      }`}
                     />
+                    {errors.amount && (
+                      <p className="mt-1 text-xs text-red-400">{errors.amount}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-light text-white/60 mb-2">
@@ -349,9 +401,19 @@ export default function BillsPage() {
                     <input
                       type="date"
                       value={newDueDate}
-                      onChange={(e) => setNewDueDate(e.target.value)}
-                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-white/30 transition-colors [color-scheme:dark]"
+                      onChange={(e) => {
+                        setNewDueDate(e.target.value)
+                        if (errors.dueDate) {
+                          setErrors({ ...errors, dueDate: "" })
+                        }
+                      }}
+                      className={`w-full px-4 py-2 bg-white/5 border rounded-lg text-white focus:outline-none transition-colors [color-scheme:dark] ${
+                        errors.dueDate ? "border-red-400/50 focus:border-red-400" : "border-white/10 focus:border-white/30"
+                      }`}
                     />
+                    {errors.dueDate && (
+                      <p className="mt-1 text-xs text-red-400">{errors.dueDate}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-light text-white/60 mb-2">
@@ -360,10 +422,20 @@ export default function BillsPage() {
                     <input
                       type="text"
                       value={newDescription}
-                      onChange={(e) => setNewDescription(e.target.value)}
+                      onChange={(e) => {
+                        setNewDescription(e.target.value)
+                        if (errors.description) {
+                          setErrors({ ...errors, description: "" })
+                        }
+                      }}
                       placeholder="Optionaler Hinweis"
-                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-colors"
+                      className={`w-full px-4 py-2 bg-white/5 border rounded-lg text-white placeholder-white/30 focus:outline-none transition-colors ${
+                        errors.description ? "border-red-400/50 focus:border-red-400" : "border-white/10 focus:border-white/30"
+                      }`}
                     />
+                    {errors.description && (
+                      <p className="mt-1 text-xs text-red-400">{errors.description}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-light text-white/60 mb-2">

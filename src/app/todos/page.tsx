@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { ArrowLeft, Plus, X, Check, Trash2, Edit2, ChevronDown, ChevronUp } from "lucide-react"
+import { todoFormSchema } from "@/lib/schemas"
 
 interface Todo {
   id: string
@@ -23,6 +24,7 @@ export default function TodosPage() {
   const [newDueDate, setNewDueDate] = useState("")
   const [loading, setLoading] = useState(true)
   const [showCompleted, setShowCompleted] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const fetchTodos = async () => {
     try {
@@ -45,7 +47,25 @@ export default function TodosPage() {
   }, [])
 
   const handleCreate = async () => {
-    if (!newTitle.trim()) return
+    // Clear previous errors
+    setErrors({})
+
+    // Validate with Zod
+    const validationResult = todoFormSchema.safeParse({
+      title: newTitle,
+      description: newDescription,
+      dueDate: newDueDate,
+    })
+
+    if (!validationResult.success) {
+      const fieldErrors: Record<string, string> = {}
+      validationResult.error.errors.forEach((err: { path: (string | number)[]; message: string }) => {
+        const field = err.path[0] as string
+        fieldErrors[field] = err.message
+      })
+      setErrors(fieldErrors)
+      return
+    }
 
     try {
       const response = editingTodo
@@ -53,18 +73,18 @@ export default function TodosPage() {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              title: newTitle,
-              description: newDescription || null,
-              dueDate: newDueDate || null,
+              title: validationResult.data.title,
+              description: validationResult.data.description || null,
+              dueDate: validationResult.data.dueDate || null,
             }),
           })
         : await fetch("/api/todos", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              title: newTitle,
-              description: newDescription || null,
-              dueDate: newDueDate || null,
+              title: validationResult.data.title,
+              description: validationResult.data.description || null,
+              dueDate: validationResult.data.dueDate || null,
             }),
           })
 
@@ -72,14 +92,25 @@ export default function TodosPage() {
         setNewTitle("")
         setNewDescription("")
         setNewDueDate("")
+        setErrors({})
         setIsDialogOpen(false)
         setEditingTodo(null)
         fetchTodos()
       } else {
         const errorData = await response.json()
-        alert("Fehler: " + (errorData.error || "Unbekannter Fehler"))
+        // Handle validation errors from backend
+        if (errorData.details && Array.isArray(errorData.details)) {
+          const fieldErrors: Record<string, string> = {}
+          errorData.details.forEach((err: { field: string; message: string }) => {
+            fieldErrors[err.field] = err.message
+          })
+          setErrors(fieldErrors)
+        } else {
+          alert("Fehler: " + (errorData.error || "Unbekannter Fehler"))
+        }
       }
     } catch (error) {
+      alert("Fehler beim Erstellen/Aktualisieren des Todos. Bitte versuche es erneut.")
     }
   }
 
@@ -97,6 +128,7 @@ export default function TodosPage() {
     setNewTitle("")
     setNewDescription("")
     setNewDueDate("")
+    setErrors({})
   }
 
   const handleToggle = async (id: string, completed: boolean) => {
@@ -204,14 +236,24 @@ export default function TodosPage() {
                     <input
                       type="text"
                       value={newTitle}
-                      onChange={(e) => setNewTitle(e.target.value)}
+                      onChange={(e) => {
+                        setNewTitle(e.target.value)
+                        if (errors.title) {
+                          setErrors({ ...errors, title: "" })
+                        }
+                      }}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") handleCreate()
                       }}
                       placeholder="Todo Titel"
-                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-colors"
+                      className={`w-full px-4 py-2 bg-white/5 border rounded-lg text-white placeholder-white/30 focus:outline-none transition-colors ${
+                        errors.title ? "border-red-400/50 focus:border-red-400" : "border-white/10 focus:border-white/30"
+                      }`}
                       autoFocus
                     />
+                    {errors.title && (
+                      <p className="mt-1 text-xs text-red-400">{errors.title}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-light text-white/60 mb-2">
@@ -220,13 +262,23 @@ export default function TodosPage() {
                     <input
                       type="text"
                       value={newDescription}
-                      onChange={(e) => setNewDescription(e.target.value)}
+                      onChange={(e) => {
+                        setNewDescription(e.target.value)
+                        if (errors.description) {
+                          setErrors({ ...errors, description: "" })
+                        }
+                      }}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") handleCreate()
                       }}
                       placeholder="Optionale Beschreibung"
-                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-colors"
+                      className={`w-full px-4 py-2 bg-white/5 border rounded-lg text-white placeholder-white/30 focus:outline-none transition-colors ${
+                        errors.description ? "border-red-400/50 focus:border-red-400" : "border-white/10 focus:border-white/30"
+                      }`}
                     />
+                    {errors.description && (
+                      <p className="mt-1 text-xs text-red-400">{errors.description}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-light text-white/60 mb-2">
@@ -235,9 +287,19 @@ export default function TodosPage() {
                     <input
                       type="date"
                       value={newDueDate}
-                      onChange={(e) => setNewDueDate(e.target.value)}
-                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-white/30 transition-colors [color-scheme:dark]"
+                      onChange={(e) => {
+                        setNewDueDate(e.target.value)
+                        if (errors.dueDate) {
+                          setErrors({ ...errors, dueDate: "" })
+                        }
+                      }}
+                      className={`w-full px-4 py-2 bg-white/5 border rounded-lg text-white focus:outline-none transition-colors [color-scheme:dark] ${
+                        errors.dueDate ? "border-red-400/50 focus:border-red-400" : "border-white/10 focus:border-white/30"
+                      }`}
                     />
+                    {errors.dueDate && (
+                      <p className="mt-1 text-xs text-red-400">{errors.dueDate}</p>
+                    )}
                   </div>
                 </div>
                 <div className="flex gap-3 mt-6">

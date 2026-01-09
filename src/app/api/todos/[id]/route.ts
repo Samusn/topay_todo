@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { updateTodoSchema } from "@/lib/schemas"
 
 export async function PATCH(
   request: NextRequest,
@@ -8,11 +9,28 @@ export async function PATCH(
   try {
     const { id } = await params
     const body = await request.json()
-    const { title, description, dueDate, completed } = body
+    
+    // Validate with Zod
+    const validationResult = updateTodoSchema.safeParse(body)
+
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { 
+          error: "Validierungsfehler",
+          details: validationResult.error.errors.map((err: { path: (string | number)[]; message: string }) => ({
+            field: err.path.join('.'),
+            message: err.message,
+          }))
+        },
+        { status: 400 }
+      )
+    }
+
+    const { title, description, dueDate, completed } = validationResult.data
 
     const updateData: any = {}
     if (title !== undefined) updateData.title = title
-    if (description !== undefined) updateData.description = description
+    if (description !== undefined) updateData.description = description || null
     if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null
     if (completed !== undefined) updateData.completed = completed
 

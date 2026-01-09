@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { updateBillSchema, togglePaidBillSchema } from "@/lib/schemas"
 
 export async function PATCH(
   request: NextRequest,
@@ -8,12 +9,67 @@ export async function PATCH(
   try {
     const { id } = await params
     const body = await request.json()
-    const { title, description, amount, dueDate, paid, paidDate, attachments } = body
+    
+    // Check if this is a simple toggle paid request
+    if (body.paid !== undefined && Object.keys(body).length <= 2) {
+      const validationResult = togglePaidBillSchema.safeParse({
+        paid: body.paid,
+        paidDate: body.paidDate || null,
+      })
+
+      if (!validationResult.success) {
+        return NextResponse.json(
+          { 
+            error: "Validierungsfehler",
+            details: validationResult.error.errors.map((err: { path: (string | number)[]; message: string }) => ({
+              field: err.path.join('.'),
+              message: err.message,
+            }))
+          },
+          { status: 400 }
+        )
+      }
+
+      const { paid, paidDate } = validationResult.data
+
+      const bill = await prisma.bill.update({
+        where: { id },
+        data: {
+          paid,
+          paidDate: paidDate ? new Date(paidDate) : null,
+        },
+      })
+
+      return NextResponse.json(bill)
+    }
+
+    // Full update validation
+    const validationResult = updateBillSchema.safeParse({
+      ...body,
+      amount: body.amount !== undefined 
+        ? (typeof body.amount === 'string' ? parseFloat(body.amount) : body.amount)
+        : undefined,
+    })
+
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { 
+          error: "Validierungsfehler",
+          details: validationResult.error.errors.map((err: { path: (string | number)[]; message: string }) => ({
+            field: err.path.join('.'),
+            message: err.message,
+          }))
+        },
+        { status: 400 }
+      )
+    }
+
+    const { title, description, amount, dueDate, paid, paidDate, attachments } = validationResult.data
 
     const updateData: any = {}
     if (title !== undefined) updateData.title = title
-    if (description !== undefined) updateData.description = description
-    if (amount !== undefined) updateData.amount = parseFloat(amount)
+    if (description !== undefined) updateData.description = description || null
+    if (amount !== undefined) updateData.amount = amount
     if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null
     if (paid !== undefined) updateData.paid = paid
     if (paidDate !== undefined) updateData.paidDate = paidDate ? new Date(paidDate) : null
