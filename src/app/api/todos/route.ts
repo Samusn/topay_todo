@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { createTodoSchema } from "@/lib/schemas"
+import { getSessionUserId } from "@/lib/auth-helpers"
 
 export async function GET() {
   try {
+    const userId = await getSessionUserId()
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
     const todos = await prisma.todo.findMany({
+      where: { userId },
       orderBy: [
         { completed: "asc" },
         { dueDate: "asc" },
@@ -41,6 +51,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const userId = await getSessionUserId()
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
     const { title, description, dueDate } = validationResult.data
 
     const todo = await prisma.todo.create({
@@ -48,6 +66,7 @@ export async function POST(request: NextRequest) {
         title,
         description: description || null,
         dueDate: dueDate ? new Date(dueDate) : null,
+        userId,
       },
     })
 

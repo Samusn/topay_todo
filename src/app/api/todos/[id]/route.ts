@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { updateTodoSchema } from "@/lib/schemas"
+import { getSessionUserId } from "@/lib/auth-helpers"
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getSessionUserId()
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
     const { id } = await params
     const body = await request.json()
     
@@ -23,6 +32,25 @@ export async function PATCH(
           }))
         },
         { status: 400 }
+      )
+    }
+
+    // Check if todo exists and belongs to user
+    const existingTodo = await prisma.todo.findUnique({
+      where: { id },
+    })
+
+    if (!existingTodo) {
+      return NextResponse.json(
+        { error: "Todo not found" },
+        { status: 404 }
+      )
+    }
+
+    if (existingTodo.userId !== userId) {
+      return NextResponse.json(
+        { error: "Forbidden" },
+        { status: 403 }
       )
     }
 
@@ -54,7 +82,35 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getSessionUserId()
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
     const { id } = await params
+
+    // Check if todo exists and belongs to user
+    const existingTodo = await prisma.todo.findUnique({
+      where: { id },
+    })
+
+    if (!existingTodo) {
+      return NextResponse.json(
+        { error: "Todo not found" },
+        { status: 404 }
+      )
+    }
+
+    if (existingTodo.userId !== userId) {
+      return NextResponse.json(
+        { error: "Forbidden" },
+        { status: 403 }
+      )
+    }
+
     await prisma.todo.delete({
       where: { id },
     })

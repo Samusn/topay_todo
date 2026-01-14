@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { createBillSchema } from "@/lib/schemas"
+import { getSessionUserId } from "@/lib/auth-helpers"
 
 export async function GET() {
   try {
+    const userId = await getSessionUserId()
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
     const bills = await prisma.bill.findMany({
+      where: { userId },
       orderBy: [
         { paid: "asc" },
         { dueDate: "asc" },
@@ -44,6 +54,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const userId = await getSessionUserId()
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
     const { title, description, amount, dueDate, attachments } = validationResult.data
 
     const bill = await prisma.bill.create({
@@ -53,6 +71,7 @@ export async function POST(request: NextRequest) {
         amount,
         dueDate: dueDate ? new Date(dueDate) : null,
         attachments: attachments ? JSON.stringify(attachments) : null,
+        userId,
       },
     })
 

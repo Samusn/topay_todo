@@ -1,13 +1,42 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { updateBillSchema, togglePaidBillSchema } from "@/lib/schemas"
+import { getSessionUserId } from "@/lib/auth-helpers"
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getSessionUserId()
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
     const { id } = await params
+
+    // Check if bill exists and belongs to user
+    const existingBill = await prisma.bill.findUnique({
+      where: { id },
+    })
+
+    if (!existingBill) {
+      return NextResponse.json(
+        { error: "Bill not found" },
+        { status: 404 }
+      )
+    }
+
+    if (existingBill.userId !== userId) {
+      return NextResponse.json(
+        { error: "Forbidden" },
+        { status: 403 }
+      )
+    }
+
     const body = await request.json()
     
     // Check if this is a simple toggle paid request
@@ -96,7 +125,35 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getSessionUserId()
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
     const { id } = await params
+
+    // Check if bill exists and belongs to user
+    const existingBill = await prisma.bill.findUnique({
+      where: { id },
+    })
+
+    if (!existingBill) {
+      return NextResponse.json(
+        { error: "Bill not found" },
+        { status: 404 }
+      )
+    }
+
+    if (existingBill.userId !== userId) {
+      return NextResponse.json(
+        { error: "Forbidden" },
+        { status: 403 }
+      )
+    }
+
     await prisma.bill.delete({
       where: { id },
     })

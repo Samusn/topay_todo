@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import LogoutButton from "./components/LogoutButton"
 
 export default function Home() {
   return (
@@ -63,7 +64,8 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="absolute bottom-8 left-0 right-0 text-center">
+        <div className="absolute bottom-8 left-0 right-0 text-center space-y-4">
+          <LogoutButton />
           <p className="text-white/30 text-xs font-light tracking-wider">
             © Samuel Soun
           </p>
