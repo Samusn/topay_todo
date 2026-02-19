@@ -1,12 +1,33 @@
 "use client"
 
 import Link from "next/link"
-import LogoutButton from "./components/LogoutButton"
+import { useRouter } from "next/navigation"
+import { LogOut } from "lucide-react"
 
 export default function Home() {
+  const router = useRouter()
+
+  async function handleLogout() {
+    await fetch("/api/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "logout" }),
+    })
+    router.push("/login")
+    router.refresh()
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-slate-950 to-black relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-slate-950/20 via-blue-950/10 to-black/30 pointer-events-none" />
+
+      <button
+        onClick={handleLogout}
+        className="absolute top-6 right-6 z-20 p-2 text-white/20 hover:text-white/50 transition-colors duration-200 touch-manipulation"
+        title="Abmelden"
+      >
+        <LogOut className="w-4 h-4" />
+      </button>
       
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-blue-400/5 to-transparent rounded-full blur-3xl" />
@@ -64,8 +85,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="absolute bottom-8 left-0 right-0 text-center space-y-4">
-          <LogoutButton />
+        <div className="absolute bottom-8 left-0 right-0 text-center">
           <p className="text-white/30 text-xs font-light tracking-wider">
             © Samuel Soun
           </p>
